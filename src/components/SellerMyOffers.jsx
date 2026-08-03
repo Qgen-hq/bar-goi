@@ -31,11 +31,15 @@ const SAMPLE_SELLER_OFFERS = [
   }
 ];
 
-export default function SellerMyOffers({ shop, lang }) {
+export default function SellerMyOffers({ shop, mySentOffers, lang }) {
   const t = translations[lang || 'ru'];
-  const [myOffers, setMyOffers] = useState(SAMPLE_SELLER_OFFERS);
 
-  const totalValueOffered = myOffers.reduce((acc, off) => {
+  // Merge real-time submitted offers with sample demo offers
+  const allOffers = (mySentOffers && mySentOffers.length > 0)
+    ? [...mySentOffers, ...SAMPLE_SELLER_OFFERS]
+    : SAMPLE_SELLER_OFFERS;
+
+  const totalValueOffered = allOffers.reduce((acc, off) => {
     const firstPrice = off.variants?.[0]?.price || off.price || 0;
     return acc + Number(firstPrice);
   }, 0);
@@ -61,7 +65,7 @@ export default function SellerMyOffers({ shop, lang }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div style={{ background: 'rgba(255,255,255,0.08)', padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div style={{ fontSize: '22px', fontWeight: 900, color: 'var(--primary-emerald)' }}>
-              {myOffers.length}
+              {allOffers.length}
             </div>
             <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 700 }}>
               {lang === 'kz' ? 'Жіберілген ұсыныстар' : 'Отправлено КП водителям'}
@@ -81,16 +85,16 @@ export default function SellerMyOffers({ shop, lang }) {
 
       {/* OFFERS LIST WITH WHATSAPP RE-CONTACT BUTTON */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {myOffers.map((offer, index) => {
+        {allOffers.map((offer, index) => {
           const carTitle = offer.carModel || offer.car_model || 'Автомобиль';
           const partTitle = offer.partNeeded || offer.part_name || 'Деталь';
-          const cleanPhone = (offer.driverPhone || offer.whatsapp_phone || '77779998877').replace(/\D/g, '');
+          const cleanPhone = (offer.driverPhone || offer.driver_phone || offer.whatsapp_phone || '77779998877').replace(/\D/g, '');
           const variants = offer.variants || [
             { brand: offer.brand || 'Оригинал', price: offer.price || 0, condition: offer.condition || 'New Original' }
           ];
 
           const waMessage = encodeURIComponent(
-            `Сәлеметсіз бе! BarGoi арқылы сізге ${carTitle} — ${partTitle} бойынша ұсыныс жіберген едім. Сұрақтарыңыз бар ма?`
+            `Сәлеметсіз бе! bar.go арқылы сізге ${carTitle} — ${partTitle} бойынша ұсыныс жіберген едім. Сұрақтарыңыз бар ма?`
           );
           const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
 
@@ -110,7 +114,7 @@ export default function SellerMyOffers({ shop, lang }) {
                 </div>
 
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', background: '#F1F5F9', padding: '4px 8px', borderRadius: '10px' }}>
-                  <Clock size={12} /> {offer.createdAgo || 'Сегодня'}
+                  <Clock size={12} /> {offer.createdAgo || 'Только что'}
                 </div>
               </div>
 

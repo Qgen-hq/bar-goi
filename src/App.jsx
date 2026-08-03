@@ -57,6 +57,16 @@ export default function App() {
     }
   });
 
+  // LocalStorage Sent Seller Offers Cache (For 'Мои ответы и клиенты')
+  const [mySentOffers, setMySentOffers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('partdrive_my_sent_offers');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const handleSetLang = (newLang) => {
@@ -90,6 +100,12 @@ export default function App() {
       localStorage.setItem('partdrive_requests', JSON.stringify(requests));
     }
   }, [requests]);
+
+  useEffect(() => {
+    if (mySentOffers && mySentOffers.length > 0) {
+      localStorage.setItem('partdrive_my_sent_offers', JSON.stringify(mySentOffers));
+    }
+  }, [mySentOffers]);
 
   useEffect(() => {
     if (user?.role === 'Driver' || user?.role === 'driver') {
@@ -165,17 +181,6 @@ export default function App() {
               }
               return req;
             }));
-          } else if (message.type === 'SHOP_RATING_UPDATED') {
-            const { sellerId, newRating, reviewsCount } = message.payload;
-            setRequests(prev => prev.map(req => ({
-              ...req,
-              offers: (req.offers || []).map(o => {
-                if (o.seller_id === sellerId || o.shopId === sellerId) {
-                  return { ...o, rating: newRating, reviews_count: reviewsCount, reviewsCount: reviewsCount };
-                }
-                return o;
-              })
-            })));
           }
         } catch (err) {
           console.error('Error handling WS msg', err);
@@ -231,7 +236,8 @@ export default function App() {
     setActiveTab('my_requests');
   };
 
-  const handleOfferSubmitted = (reqId, newOffer) => {
+  const handleOfferSubmitted = (reqId, newOffer, tenderInfo) => {
+    // 1. Update requests list
     setRequests(prev => prev.map(r => {
       if (r.id === reqId) {
         const existing = r.offers || [];
@@ -240,6 +246,18 @@ export default function App() {
       }
       return r;
     }));
+
+    // 2. Prepend to seller's sent offers feed ('Мои ответы и клиенты')
+    const enrichedSentOffer = {
+      ...newOffer,
+      carModel: tenderInfo?.carModel || tenderInfo?.car_model || 'Автомобиль',
+      partNeeded: tenderInfo?.partNeeded || tenderInfo?.part_name || 'Деталь',
+      driverPhone: tenderInfo?.driverPhone || tenderInfo?.driver_phone || '77779998877',
+      createdAgo: 'Только что',
+      status: 'SENT'
+    };
+
+    setMySentOffers(prev => [enrichedSentOffer, ...prev]);
   };
 
   const handleReviewSubmitted = (updatedSeller) => {
@@ -356,12 +374,14 @@ export default function App() {
           ) : activeTab === 'my_offers' ? (
             <SellerMyOffers
               shop={profile}
+              mySentOffers={mySentOffers}
               lang={lang}
             />
           ) : (
             <SellerTendersFeed
               shop={profile}
               requests={requests}
+              mySentOffers={mySentOffers}
               lang={lang}
               onSubmitOffer={handleOfferSubmitted}
               onOpenShopSetup={() => setActiveTab('shop_profile')}

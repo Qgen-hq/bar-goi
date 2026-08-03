@@ -66,11 +66,11 @@ const SAMPLE_SELLER_FEED = [
   }
 ];
 
-export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
+export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
   const t = translations[lang || 'ru'];
 
   const [sellerSubTab, setSellerSubTab] = useState('feed');
-  const [filterMode, setFilterMode] = useState('targeted'); // 'targeted' | 'all'
+  const [filterMode, setFilterMode] = useState('targeted');
   const [activeTenderForOffer, setActiveTenderForOffer] = useState(null);
   
   const [variants, setVariants] = useState([
@@ -83,8 +83,6 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
   const [isOnline, setIsOnline] = useState(true);
 
   const rawRequests = (requests && requests.length > 0) ? requests : SAMPLE_SELLER_FEED;
-
-  // Strict Seller Country & Category Filtering Engine
   const shopCountries = shop?.countries || ['China', 'Germany', 'Japan'];
 
   const filteredRequests = rawRequests.filter(req => {
@@ -159,8 +157,8 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
       request_id: activeTenderForOffer.id,
       sellerId: shop?.user_id || 'usr-seller-1',
       seller_id: shop?.user_id || 'usr-seller-1',
-      shopName: shop?.shop_name || shop?.shopName || 'German Parts (Бутик #42)',
-      shop_name: shop?.shop_name || shop?.shopName || 'German Parts (Бутик #42)',
+      shopName: shop?.shop_name || shop?.shopName || 'ChinaParts Taldykorgan (Бутик #42)',
+      shop_name: shop?.shop_name || shop?.shopName || 'ChinaParts Taldykorgan (Бутик #42)',
       marketName: shop?.market_name || shop?.marketName || 'Талдыкорган - Центральный авторынок',
       market_name: shop?.market_name || shop?.marketName || 'Талдыкорган - Центральный авторынок',
       boothNumber: shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42',
@@ -191,27 +189,30 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
 
       if (res.ok && data.success) {
         setSuccess(true);
-        onSubmitOffer(activeTenderForOffer.id, data.offer || offerPayload);
+        onSubmitOffer(activeTenderForOffer.id, data.offer || offerPayload, activeTenderForOffer);
         setTimeout(() => {
           setSuccess(false);
           setActiveTenderForOffer(null);
-        }, 1500);
+          setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+        }, 1200);
       } else {
         setSuccess(true);
-        onSubmitOffer(activeTenderForOffer.id, offerPayload);
+        onSubmitOffer(activeTenderForOffer.id, offerPayload, activeTenderForOffer);
         setTimeout(() => {
           setSuccess(false);
           setActiveTenderForOffer(null);
-        }, 1500);
+          setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+        }, 1200);
       }
     } catch (err) {
       setSubmitting(false);
       setSuccess(true);
-      onSubmitOffer(activeTenderForOffer.id, offerPayload);
+      onSubmitOffer(activeTenderForOffer.id, offerPayload, activeTenderForOffer);
       setTimeout(() => {
         setSuccess(false);
         setActiveTenderForOffer(null);
-      }, 1500);
+        setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+      }, 1200);
     }
   };
 
@@ -261,7 +262,6 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
               ⚙️ Настройки
             </button>
 
-            {/* PROMINENT LOGOUT BUTTON FOR SELLER */}
             {onLogout && (
               <button
                 onClick={onLogout}
@@ -335,7 +335,7 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
 
       {/* RENDER SUB-TAB 2: SELLER MY OFFERS AND CLIENT LEADS */}
       {sellerSubTab === 'offers_history' ? (
-        <SellerMyOffers shop={shop} lang={lang} />
+        <SellerMyOffers shop={shop} mySentOffers={mySentOffers} lang={lang} />
       ) : (
         /* RENDER SUB-TAB 1: REQUESTS FEED WITH TAG FILTERING */
         <div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Store, ArrowRight, Zap, ShieldCheck, MapPin, Clock } from 'lucide-react';
+import { Car, Store, ArrowRight, Zap, ShieldCheck, MapPin, Clock, Globe } from 'lucide-react';
 import { translations } from '../i18n/translations';
 
 export default function SplashScreen({ lang, setLang, onStart }) {
@@ -8,7 +8,44 @@ export default function SplashScreen({ lang, setLang, onStart }) {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 4px' }}>
       {/* Top Hero Banner */}
-      <div className="hero-banner" style={{ textAlign: 'center', padding: '24px 16px', marginBottom: '20px', background: 'var(--dark-slate)', color: '#FFFFFF', borderRadius: '24px' }}>
+      <div className="hero-banner" style={{ textAlign: 'center', padding: '24px 16px', marginBottom: '20px', background: 'var(--dark-slate)', color: '#FFFFFF', borderRadius: '24px', position: 'relative' }}>
+        
+        {/* LANDING PAGE LANGUAGE SWITCHER PILL */}
+        <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
+          <button
+            type="button"
+            onClick={() => setLang('kz')}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '11px',
+              fontWeight: 900,
+              cursor: 'pointer',
+              background: lang === 'kz' ? 'var(--primary-emerald)' : 'transparent',
+              color: lang === 'kz' ? '#FFFFFF' : '#94A3B8'
+            }}
+          >
+            KZ
+          </button>
+          <button
+            type="button"
+            onClick={() => setLang('ru')}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '11px',
+              fontWeight: 900,
+              cursor: 'pointer',
+              background: lang === 'ru' ? 'var(--primary-emerald)' : 'transparent',
+              color: lang === 'ru' ? '#FFFFFF' : '#94A3B8'
+            }}
+          >
+            RU
+          </button>
+        </div>
+
         <div style={{ width: '52px', height: '52px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', boxShadow: '0 8px 24px var(--primary-emerald-glow)' }}>
           <Zap size={28} fill="#FFFFFF" />
         </div>

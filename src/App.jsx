@@ -6,6 +6,7 @@ import DriverOnboarding from './components/DriverOnboarding';
 import SellerOnboarding from './components/SellerOnboarding';
 import DriverRequestForm from './components/DriverRequestForm';
 import DriverRequestsList from './components/DriverRequestsList';
+import DriverProfile from './components/DriverProfile';
 import SellerTendersFeed from './components/SellerTendersFeed';
 import SellerMyOffers from './components/SellerMyOffers';
 import AuthModal from './components/AuthModal';
@@ -282,25 +283,42 @@ export default function App() {
       {authStep === 'MAIN' && (
         user?.role === 'Driver' || user?.role === 'driver' ? (
           /* DRIVER INTERFACE ONLY */
-          <div className="grid-desktop-2col">
-            <div>
-              <DriverRequestsList
-                requests={requests}
-                loadingRequests={loadingRequests}
-                lang={lang}
-                userPhone={user?.phone}
-                onRefresh={fetchRequests}
-                onReviewSubmitted={handleReviewSubmitted}
-              />
-            </div>
-            <div>
+          activeTab === 'driver_profile' ? (
+            <DriverProfile
+              user={user}
+              requests={requests}
+              lang={lang}
+              onLogout={handleLogout}
+            />
+          ) : activeTab === 'new_request' ? (
+            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
               <DriverRequestForm
                 user={user}
                 lang={lang}
                 onRequestSubmitted={handleRequestSubmitted}
               />
             </div>
-          </div>
+          ) : (
+            <div className="grid-desktop-2col">
+              <div>
+                <DriverRequestsList
+                  requests={requests}
+                  loadingRequests={loadingRequests}
+                  lang={lang}
+                  userPhone={user?.phone}
+                  onRefresh={fetchRequests}
+                  onReviewSubmitted={handleReviewSubmitted}
+                />
+              </div>
+              <div>
+                <DriverRequestForm
+                  user={user}
+                  lang={lang}
+                  onRequestSubmitted={handleRequestSubmitted}
+                />
+              </div>
+            </div>
+          )
         ) : (
           /* SELLER INTERFACE ONLY */
           activeTab === 'shop_profile' ? (

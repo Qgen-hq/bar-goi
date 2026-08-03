@@ -86,8 +86,8 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       whatsapp: phone.trim(),
       countries,
       categories,
-      rating: shop?.rating || 4.9,
-      reviews_count: shop?.reviews_count || 12
+      rating: 5.0, // STRICT 5-STAR DEFAULT FOR ALL BOUTIQUES!
+      reviews_count: shop?.reviews_count || 1
     };
 
     try {

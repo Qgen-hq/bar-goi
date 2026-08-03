@@ -1,5 +1,5 @@
 import React from 'react';
-import { Car, Store, ArrowRight, Zap, ShieldCheck, MapPin, Clock } from 'lucide-react';
+import { Car, Store, ArrowRight, Zap, ShieldCheck, Clock, Sparkles } from 'lucide-react';
 import { translations } from '../i18n/translations';
 
 export default function SplashScreen({ lang, setLang, onStart }) {
@@ -8,7 +8,7 @@ export default function SplashScreen({ lang, setLang, onStart }) {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 4px' }}>
       {/* Top Hero Banner */}
-      <div className="hero-banner" style={{ textAlign: 'center', padding: '32px 20px', marginBottom: '20px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#FFFFFF', borderRadius: '24px', position: 'relative', boxShadow: 'var(--shadow-md)' }}>
+      <div className="hero-banner" style={{ textAlign: 'center', padding: '36px 20px', marginBottom: '20px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#FFFFFF', borderRadius: '24px', position: 'relative', boxShadow: 'var(--shadow-md)' }}>
         
         {/* LANDING PAGE LANGUAGE SWITCHER PILL */}
         <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
@@ -46,24 +46,29 @@ export default function SplashScreen({ lang, setLang, onStart }) {
           </button>
         </div>
 
-        <div style={{ width: '56px', height: '56px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 8px 24px var(--primary-emerald-glow)', animation: 'pulseGlow 3s infinite' }}>
-          <Zap size={30} fill="#FFFFFF" />
+        <div style={{ width: '60px', height: '60px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '20px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 8px 24px var(--primary-emerald-glow)', animation: 'pulseGlow 3s infinite' }}>
+          <Zap size={32} fill="#FFFFFF" />
         </div>
 
-        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '16px', lineHeight: 1.2 }}>
+        {/* CATCHY BRAND SLOGAN */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 200, 83, 0.15)', border: '1px solid var(--primary-emerald)', color: '#6EE7B7', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, marginBottom: '12px' }}>
+          <Sparkles size={14} color="var(--primary-emerald)" />
+          <span>
+            {lang === 'kz' ? 'Бөлшек бар ма? Тауып береміз! Барлық автодүкендер бір жерде' : 'Любая запчасть за 60 секунд — Все автобутики в одном месте'}
+          </span>
+        </div>
+
+        <h1 style={{ fontSize: '30px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '16px', lineHeight: 1.2 }}>
           bar<span style={{ color: 'var(--primary-emerald)' }}>.go</span> — {t.welcomeTitle.replace('bar.go — ', '')}
         </h1>
 
-        {/* Live Metrics Bar */}
+        {/* Live Metrics Bar (CLEANED - NO CITY LIST PILL) */}
         <div className="metrics-bar" style={{ justifyContent: 'center' }}>
           <div className="metric-pill">
-            <ShieldCheck size={13} color="var(--primary-emerald)" /> <b>45+ Бутиков в сети</b>
+            <ShieldCheck size={13} color="var(--primary-emerald)" /> <b>45+ Автобутиков в сети</b>
           </div>
           <div className="metric-pill">
-            <Clock size={13} color="#FBBF24" /> <b>Ответ за 3 минуты</b>
-          </div>
-          <div className="metric-pill">
-            <MapPin size={13} color="#6EE7B7" /> <b>Талдыкорган, Алматы, Астана</b>
+            <Clock size={13} color="#FBBF24" /> <b>Быстрый ответ за 3 минуты</b>
           </div>
         </div>
       </div>

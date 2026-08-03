@@ -165,9 +165,9 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
       booth_number: shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42',
       whatsapp: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
       whatsapp_phone: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
-      rating: shop?.rating || 4.9,
-      reviewsCount: shop?.reviews_count || 12,
-      reviews_count: shop?.reviews_count || 12,
+      rating: 5.0, // STRICT 5.0 STAR DEFAULT FOR ALL BOUTIQUES!
+      reviewsCount: shop?.reviews_count || 1,
+      reviews_count: shop?.reviews_count || 1,
       condition: firstVariant.condition,
       brand: firstVariant.brand.trim(),
       price: Number(firstVariant.price),
@@ -193,7 +193,7 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
         setTimeout(() => {
           setSuccess(false);
           setActiveTenderForOffer(null);
-          setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+          setSellerSubTab('offers_history');
         }, 1200);
       } else {
         setSuccess(true);
@@ -201,7 +201,7 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
         setTimeout(() => {
           setSuccess(false);
           setActiveTenderForOffer(null);
-          setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+          setSellerSubTab('offers_history');
         }, 1200);
       }
     } catch (err) {
@@ -211,7 +211,7 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
       setTimeout(() => {
         setSuccess(false);
         setActiveTenderForOffer(null);
-        setSellerSubTab('offers_history'); // Switch to 'Мои ответы и клиенты'!
+        setSellerSubTab('offers_history');
       }, 1200);
     }
   };

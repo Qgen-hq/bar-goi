@@ -23,7 +23,7 @@ const SAMPLE_DEMO_REQUESTS = [
         boothNumber: '1-й ряд, бутик 14',
         whatsapp: '77779998877',
         whatsapp_phone: '77779998877',
-        rating: 4.9,
+        rating: 5.0,
         reviewsCount: 18,
         reviews_count: 18,
         variants: [
@@ -146,7 +146,7 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
                               </div>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#FEF3C7', padding: '4px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 800, color: '#D97706' }}>
-                                <Star size={12} fill="#D97706" /> {off.rating || 4.9} ({off.reviewsCount || off.reviews_count || 12})
+                                <Star size={12} fill="#D97706" /> 5.0 (★★★★★)
                               </div>
                             </div>
 

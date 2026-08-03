@@ -13,16 +13,16 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, lang, s
       <header className="web-navbar">
         <div className="web-navbar-container">
 
-          {/* LEFT: ANIMATED BARGOI SVG LOGO & TITLE */}
+          {/* LEFT: ANIMATED BAR.GO SVG LOGO & TITLE */}
           <div className="nav-logo-group" onClick={() => setActiveTab(isDriver ? 'my_requests' : 'tenders_feed')}>
             <div style={{ width: '40px', height: '40px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px var(--primary-emerald-glow)', animation: 'pulseGlow 3s infinite' }}>
               <Zap size={24} fill="#FFFFFF" />
             </div>
             <div>
-              <span className="nav-brand-title" style={{ fontSize: '22px', lineHeight: 1 }}>
-                Bar<span className="nav-brand-accent">Goi</span>
+              <span className="nav-brand-title" style={{ fontSize: '24px', lineHeight: 1, letterSpacing: '-0.5px' }}>
+                bar<span className="nav-brand-accent" style={{ color: 'var(--primary-emerald)' }}>.go</span>
               </span>
-              <span style={{ fontSize: '11px', color: '#94A3B8', display: 'block', marginTop: '2px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: '10px', color: '#94A3B8', display: 'block', marginTop: '2px', fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {lang === 'kz' ? 'Автобөлшектер сервисі' : 'Сервис автозапчастей'}
               </span>
             </div>

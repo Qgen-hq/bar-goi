@@ -1,8 +1,8 @@
 export const translations = {
   ru: {
     // Top Navbar & Branding
-    appTitle: 'BarGoi',
-    tagline: 'BarGoi — Сервис поиска автозапчастей',
+    appTitle: 'bar.go',
+    tagline: 'bar.go — Сервис поиска автозапчастей',
     roleDriverBadge: 'Водитель (Покупатель)',
     roleSellerBadge: 'Продавец (Автобутик)',
     logoutBtn: 'Выйти',
@@ -11,7 +11,7 @@ export const translations = {
     langTitle: 'Язык / Тіл',
 
     // Screen 0: Splash / Welcome Landing
-    welcomeTitle: 'BarGoi — Поиск автозапчастей за 60 секунд',
+    welcomeTitle: 'bar.go — Поиск автозапчастей за 60 секунд',
     welcomeSubtitle: 'Создайте запрос — и автомагазины города предоставят лучшие цены напрямую',
     selectRoleTitle: 'Выберите категорию использования',
     driverRoleTitle: 'Я Водитель (Ищу запчасти)',
@@ -21,7 +21,7 @@ export const translations = {
     startBtn: 'Продолжить',
 
     // Screen 2: Phone Auth
-    phoneAuthTitle: 'Вход в BarGoi по номеру',
+    phoneAuthTitle: 'Вход в bar.go по номеру',
     phoneAuthSub: 'Укажите ваш контактный номер телефона',
     phoneLabel: 'Номер телефона (+7 7XX XXX XX XX)',
     sendOtpBtn: 'Войти в аккаунт',
@@ -48,10 +48,10 @@ export const translations = {
     detectedCategory: 'Категория',
     photosLabel: 'Фотографии детали (до 3 фото)',
     publishTenderBtn: 'Найти деталь',
-    tenderCreatedSuccess: 'Запрос на деталь успешно опубликован в BarGoi!',
+    tenderCreatedSuccess: 'Запрос на деталь успешно опубликован в bar.go!',
 
     // Seller Feed & Offers
-    sellerOnboardTitle: 'Регистрация Автобутика в BarGoi',
+    sellerOnboardTitle: 'Регистрация Автобутика в bar.go',
     sellerOnboardDesc: 'Укажите локацию вашего бутика и специализацию для получения точных запросов',
     sellerFeedTitle: 'Запросы от покупателей',
     sellerFeedSubtitle: 'Отправляйте варианты цен (до 3 марок) и получайте клиентов напрямую',
@@ -89,7 +89,7 @@ export const translations = {
     saveShopBtn: 'Сохранить профиль бутика',
     shopSavedSuccess: 'Профиль бутика успешно сохранен!',
 
-    // Countries & Categories (Zero Emojis)
+    // Countries & Categories
     countryGermany: 'Германия',
     countryJapan: 'Япония',
     countryKorea: 'Корея',
@@ -113,8 +113,8 @@ export const translations = {
   },
   kz: {
     // Top Navbar & Branding
-    appTitle: 'BarGoi',
-    tagline: 'BarGoi — Автобөлшектерді іздеу сервисі',
+    appTitle: 'bar.go',
+    tagline: 'bar.go — Автобөлшектерді іздеу сервисі',
     roleDriverBadge: 'Жүргізуші (Сатып алушы)',
     roleSellerBadge: 'Сатушы (Автобутик)',
     logoutBtn: 'Шығу',
@@ -123,7 +123,7 @@ export const translations = {
     langTitle: 'Язык / Тіл',
 
     // Screen 0: Splash / Welcome Landing
-    welcomeTitle: 'BarGoi — Автобөлшектерді 60 секундта іздеу сервисі',
+    welcomeTitle: 'bar.go — Автобөлшектерді 60 секундта іздеу сервисі',
     welcomeSubtitle: '1 сұраныс қалдырыңыз — қаланың автодүкендері сізге баға нұсқаларын жібереді',
     selectRoleTitle: 'Платформадағы роліңізді таңдаңыз',
     driverRoleTitle: 'Мен Жүргізушімін (Бөлшек іздеймін)',
@@ -133,11 +133,11 @@ export const translations = {
     startBtn: 'Жалғастыру',
 
     // Screen 2: Phone Auth
-    phoneAuthTitle: 'BarGoi жүйесіне кіру',
+    phoneAuthTitle: 'bar.go жүйесіне кіру',
     phoneAuthSub: 'Байланыс үшін телефон нөміріңізді көрсетіңіз',
     phoneLabel: 'Телефон нөмірі (+7 7XX XXX XX XX)',
     sendOtpBtn: 'Аккаунтқа кіру',
-    otpCodeLabel: 'СМС-тен код',
+    otpCodeLabel: 'Код из СМС',
     verifyOtpBtn: 'Аккаунтқа кіру',
     otpToastTitle: 'СМС-хабарлама:',
     otpToastCodeMsg: 'Сіздің кіру кодыңыз:',
@@ -160,10 +160,10 @@ export const translations = {
     detectedCategory: 'Категориясы',
     photosLabel: 'Бөлшектің фотосуреттері (3 фотоға дейін)',
     publishTenderBtn: 'Бөлшекті табу',
-    tenderCreatedSuccess: 'Бөлшекке сұраныс BarGoi жүйесінде сәтті жарияланды!',
+    tenderCreatedSuccess: 'Бөлшекке сұраныс bar.go жүйесінде сәтті жарияланды!',
 
     // Seller Feed & Offers
-    sellerOnboardTitle: 'BarGoi жүйесінде Автобутикті тіркеу',
+    sellerOnboardTitle: 'bar.go жүйесінде Автобутикті тіркеу',
     sellerOnboardDesc: 'Дәл сұраныстарды алу үшін бутигіңіздің орналасқан жерін көрсетіңіз',
     sellerFeedTitle: 'Сатып алушылардың сұраныстары',
     sellerFeedSubtitle: 'Баға нұсқаларын жіберіп (3 маркаға дейін), клиенттерді тікелей алыңыз',
@@ -201,7 +201,7 @@ export const translations = {
     saveShopBtn: 'Бутик профилін сақтау',
     shopSavedSuccess: 'Бутик профилі сәтті сақталды!',
 
-    // Countries & Categories (Zero Emojis)
+    // Countries & Categories
     countryGermany: 'Германия',
     countryJapan: 'Япония',
     countryKorea: 'Корея',

@@ -50,8 +50,8 @@ export default function SplashScreen({ lang, setLang, onStart }) {
           <Zap size={30} fill="#FFFFFF" />
         </div>
 
-        <h1 style={{ fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px', lineHeight: 1.2 }}>
-          Bar<span style={{ color: 'var(--primary-emerald)' }}>Goi</span> — {t.welcomeTitle}
+        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px', lineHeight: 1.2 }}>
+          bar<span style={{ color: 'var(--primary-emerald)' }}>.go</span> — {t.welcomeTitle.replace('bar.go — ', '')}
         </h1>
 
         <p style={{ fontSize: '14px', color: '#94A3B8', maxWidth: '600px', margin: '0 auto 16px auto', lineHeight: 1.4 }}>

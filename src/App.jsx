@@ -13,6 +13,8 @@ import AuthModal from './components/AuthModal';
 
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('partdrive_lang') || 'ru');
+  const [selectedCity, setSelectedCity] = useState(() => localStorage.getItem('partdrive_city') || 'Талдыкорган');
+  
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('partdrive_user');
@@ -43,15 +45,18 @@ export default function App() {
     return 'WELCOME';
   });
 
-  const [intentRole, setIntentRole] = useState(null);
   const [activeTab, setActiveTab] = useState('my_requests');
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const handleSetLang = (newLang) => {
     setLang(newLang);
     localStorage.setItem('partdrive_lang', newLang);
+  };
+
+  const handleSetCity = (newCity) => {
+    setSelectedCity(newCity);
+    localStorage.setItem('partdrive_city', newCity);
   };
 
   useEffect(() => {
@@ -158,35 +163,17 @@ export default function App() {
     };
   }, []);
 
-  const handleStartAuth = (selectedIntentRole) => {
-    setIntentRole(selectedIntentRole);
-    setIsAuthOpen(true);
-  };
-
-  const handleAuthSuccess = (loginData) => {
-    const u = loginData.profile || loginData.user;
-    setUser(u);
-    setIsAuthOpen(false);
-
-    if (loginData.requiresOnboarding) {
-      setProfile(null);
-      setAuthStep('ONBOARDING');
-    } else {
-      setProfile(loginData.sellerProfile || loginData.profile || u);
-      setAuthStep('MAIN');
-    }
-  };
-
-  const handleSelectRole = (selectedRole) => {
-    const updatedUser = { ...user, role: selectedRole };
-    setUser(updatedUser);
-    localStorage.setItem('partdrive_user', JSON.stringify(updatedUser));
+  // Direct All-in-One Role Selection Start
+  const handleStartRoleFlow = (selectedRole) => {
+    const newUser = { id: 'usr-' + Date.now(), role: selectedRole };
+    setUser(newUser);
     setAuthStep('ONBOARDING');
   };
 
   const handleOnboardingComplete = (updatedUser, updatedProfile) => {
     if (updatedUser) setUser(updatedUser);
     if (updatedProfile) setProfile(updatedProfile);
+    if (updatedUser?.city) handleSetCity(updatedUser.city);
     setAuthStep('MAIN');
     setActiveTab(updatedUser?.role === 'seller' ? 'tenders_feed' : 'my_requests');
   };
@@ -194,14 +181,13 @@ export default function App() {
   const handleLogout = () => {
     setUser(null);
     setProfile(null);
-    setIntentRole(null);
     localStorage.removeItem('partdrive_user');
     localStorage.removeItem('partdrive_profile');
     setAuthStep('WELCOME');
   };
 
   const handleRequestSubmitted = (newReq) => {
-    setRequests(prev => [newReq, ...prev]);
+    setRequests(prev => [{ ...newReq, city: selectedCity }, ...prev]);
     setActiveTab('my_requests');
   };
 
@@ -236,6 +222,8 @@ export default function App() {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       user={user}
+      selectedCity={selectedCity}
+      setSelectedCity={handleSetCity}
       lang={lang}
       setLang={handleSetLang}
       onLogout={handleLogout}
@@ -245,19 +233,11 @@ export default function App() {
         <SplashScreen
           lang={lang}
           setLang={handleSetLang}
-          onStart={handleStartAuth}
+          onStart={handleStartRoleFlow}
         />
       )}
 
-      {/* SCREEN 1: ROLE SELECTION CARDS */}
-      {authStep === 'ROLE_SELECT' && (
-        <RoleSelectionScreen
-          lang={lang}
-          onSelectRole={handleSelectRole}
-        />
-      )}
-
-      {/* SCREEN 3: ROLE ONBOARDING */}
+      {/* SCREEN 1: ALL-IN-ONE ROLE ONBOARDING */}
       {authStep === 'ONBOARDING' && (
         user?.role === 'Driver' || user?.role === 'driver' ? (
           <DriverOnboarding
@@ -348,15 +328,6 @@ export default function App() {
           )
         )
       )}
-
-      {/* AUTHENTICATION MODAL */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onAuthSuccess={handleAuthSuccess}
-        intentRole={intentRole}
-        lang={lang}
-      />
     </WebLayout>
   );
 }

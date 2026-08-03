@@ -1,11 +1,14 @@
 import React from 'react';
-import { ShoppingBag, PlusCircle, User, Store, LogOut, Zap, Shield, Sparkles, MessageSquare, Globe } from 'lucide-react';
+import { ShoppingBag, PlusCircle, User, Store, LogOut, Zap, Shield, Sparkles, MessageSquare, MapPin } from 'lucide-react';
 import { translations } from '../i18n/translations';
+import { KZ_CITIES } from './DriverOnboarding';
 
-export default function WebLayout({ role, activeTab, setActiveTab, user, lang, setLang, onLogout, children }) {
+export default function WebLayout({ role, activeTab, setActiveTab, user, selectedCity, setSelectedCity, lang, setLang, onLogout, children }) {
   const t = translations[lang || 'ru'];
   const isDriver = role === 'Driver' || role === 'driver';
   const isSeller = role === 'Seller' || role === 'seller';
+
+  const currentCity = selectedCity || user?.city || 'Талдыкорган';
 
   return (
     <div className="web-app-canvas">
@@ -19,13 +22,37 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, lang, s
             <div>
               <span className="nav-brand-title">Bar<span className="nav-brand-accent">Goi</span></span>
               <span style={{ fontSize: '10px', color: '#94A3B8', display: 'block', marginTop: '-4px', fontWeight: 700 }}>
-                Талдықорған автобөлшектер
+                {currentCity} автобөлшектер
               </span>
             </div>
           </div>
 
-          {/* RIGHT SIDE GROUP: ALWAYS VISIBLE LANGUAGE SWITCHER & DESKTOP TABS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* RIGHT SIDE GROUP: CITY SELECTOR + LANGUAGE SWITCHER + DESKTOP TABS */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* CITY SELECTOR DROPDOWN */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px 8px' }}>
+              <MapPin size={14} color="var(--primary-emerald)" />
+              <select
+                value={currentCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                {KZ_CITIES.map(c => (
+                  <option key={c} value={c} style={{ background: '#0F172A', color: '#FFFFFF' }}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Desktop Navigation Items */}
             <div className="nav-tabs-desktop">
               {isDriver && (
@@ -85,21 +112,20 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, lang, s
               )}
             </div>
 
-            {/* UNIVERSAL LANGUAGE SWITCHER (VISIBLE ON MOBILE & DESKTOP) */}
+            {/* UNIVERSAL LANGUAGE SWITCHER */}
             <div style={{ display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
               <button
                 type="button"
                 onClick={() => setLang('kz')}
                 style={{
-                  padding: '5px 12px',
+                  padding: '4px 8px',
                   borderRadius: '8px',
                   border: 'none',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 900,
                   cursor: 'pointer',
                   background: lang === 'kz' ? 'var(--primary-emerald)' : 'transparent',
-                  color: lang === 'kz' ? '#FFFFFF' : '#94A3B8',
-                  transition: 'all 0.2s ease'
+                  color: lang === 'kz' ? '#FFFFFF' : '#94A3B8'
                 }}
               >
                 KZ
@@ -109,15 +135,14 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, lang, s
                 type="button"
                 onClick={() => setLang('ru')}
                 style={{
-                  padding: '5px 12px',
+                  padding: '4px 8px',
                   borderRadius: '8px',
                   border: 'none',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 900,
                   cursor: 'pointer',
                   background: lang === 'ru' ? 'var(--primary-emerald)' : 'transparent',
-                  color: lang === 'ru' ? '#FFFFFF' : '#94A3B8',
-                  transition: 'all 0.2s ease'
+                  color: lang === 'ru' ? '#FFFFFF' : '#94A3B8'
                 }}
               >
                 RU
@@ -125,8 +150,8 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, lang, s
             </div>
 
             {user && (
-              <button onClick={onLogout} className="nav-tab-btn" style={{ color: '#F87171', padding: '6px 10px' }} title={t.logoutBtn}>
-                <LogOut size={18} />
+              <button onClick={onLogout} className="nav-tab-btn" style={{ color: '#F87171', padding: '4px 8px' }} title={t.logoutBtn}>
+                <LogOut size={16} />
               </button>
             )}
           </div>

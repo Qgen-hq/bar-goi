@@ -85,7 +85,6 @@ export default function App() {
     }
   }, [profile]);
 
-  // Sync requests to LocalStorage
   useEffect(() => {
     if (requests && requests.length > 0) {
       localStorage.setItem('partdrive_requests', JSON.stringify(requests));
@@ -113,7 +112,6 @@ export default function App() {
       
       if (Array.isArray(data)) {
         setRequests(prev => {
-          // Merge server data with local cache
           const merged = [...data];
           prev.forEach(localItem => {
             if (!merged.some(m => m.id === localItem.id)) {
@@ -214,6 +212,12 @@ export default function App() {
     setAuthStep('WELCOME');
   };
 
+  const handleUpdateDriverProfile = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('partdrive_user', JSON.stringify(updatedUser));
+    if (updatedUser?.city) handleSetCity(updatedUser.city);
+  };
+
   const handleRequestSubmitted = (newReq) => {
     const enrichedReq = {
       ...newReq,
@@ -305,6 +309,7 @@ export default function App() {
               requests={requests}
               lang={lang}
               onLogout={handleLogout}
+              onUpdateProfile={handleUpdateDriverProfile}
             />
           ) : activeTab === 'new_request' ? (
             <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -360,6 +365,7 @@ export default function App() {
               lang={lang}
               onSubmitOffer={handleOfferSubmitted}
               onOpenShopSetup={() => setActiveTab('shop_profile')}
+              onLogout={handleLogout}
             />
           )
         )

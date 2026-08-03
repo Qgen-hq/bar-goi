@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter, LogOut } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import BottomSheet from './BottomSheet';
 import SellerMyOffers from './SellerMyOffers';
@@ -66,7 +66,7 @@ const SAMPLE_SELLER_FEED = [
   }
 ];
 
-export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer, onOpenShopSetup }) {
+export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
   const t = translations[lang || 'ru'];
 
   const [sellerSubTab, setSellerSubTab] = useState('feed');
@@ -218,7 +218,7 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
       {/* Seller Header Dashboard Card */}
-      <div style={{ background: 'var(--dark-slate)', color: '#fff', padding: '20px', borderRadius: 'var(--radius-lg)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '20px', borderRadius: 'var(--radius-lg)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -232,14 +232,14 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setIsOnline(!isOnline)}
               style={{
                 background: isOnline ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 border: isOnline ? '1px solid #10B981' : '1px solid #EF4444',
                 color: isOnline ? '#34D399' : '#F87171',
-                padding: '6px 14px',
+                padding: '6px 12px',
                 borderRadius: '20px',
                 fontSize: '12px',
                 fontWeight: 800,
@@ -260,6 +260,28 @@ export default function SellerTendersFeed({ shop, requests, lang, onSubmitOffer,
             >
               ⚙️ Настройки
             </button>
+
+            {/* PROMINENT LOGOUT BUTTON FOR SELLER */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  border: '1px solid #EF4444',
+                  color: '#F87171',
+                  padding: '6px 12px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <LogOut size={14} /> {lang === 'kz' ? 'Шығу' : 'Выйти'}
+              </button>
+            )}
           </div>
         </div>
 

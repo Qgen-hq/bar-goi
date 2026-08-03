@@ -1,0 +1,651 @@
+{
+  "users": [
+    {
+      "phone": "+7 701 111 22 33",
+      "role": "Driver",
+      "name": "Almas B."
+    },
+    {
+      "phone": "+7 777 999 88 77",
+      "role": "Seller",
+      "name": "AutoZap Taldykorgan"
+    }
+  ],
+  "shops": [
+    {
+      "id": "shop-1",
+      "phone": "+7 777 999 88 77",
+      "shopName": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "whatsapp": "77779998877",
+      "countries": [
+        "Germany"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ],
+      "rating": 4.9,
+      "createdAt": "2026-07-25T06:38:22.450Z"
+    },
+    {
+      "id": "shop-2",
+      "phone": "+7 705 555 44 33",
+      "shopName": "JapAuto Taldy (Бутик #18)",
+      "city": "Талдыкорган",
+      "whatsapp": "77055554433",
+      "countries": [
+        "Japan",
+        "Korea"
+      ],
+      "categories": [
+        "Engine",
+        "Transmission",
+        "Brakes",
+        "Suspension",
+        "Consumables"
+      ],
+      "rating": 4.8,
+      "createdAt": "2026-07-25T06:38:22.450Z"
+    },
+    {
+      "id": "shop-3",
+      "phone": "+7 747 123 45 67",
+      "shopName": "ChinaDrive Parts",
+      "city": "Талдыкорган",
+      "whatsapp": "77471234567",
+      "countries": [
+        "China",
+        "USA"
+      ],
+      "categories": [
+        "Engine",
+        "Body",
+        "Optics",
+        "Suspension",
+        "Electrical"
+      ],
+      "rating": 4.7,
+      "createdAt": "2026-07-25T06:38:22.450Z"
+    },
+    {
+      "id": "shop-1784961700510",
+      "rating": 5,
+      "createdAt": "2026-07-25T06:42:46.334Z",
+      "phone": "+77772261916",
+      "shopName": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "whatsapp": "77082294712",
+      "countries": [
+        "Germany"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    },
+    {
+      "id": "shop-1784963055333",
+      "rating": 5,
+      "reviewsCount": 0,
+      "createdAt": "2026-07-25T07:04:27.885Z",
+      "phone": "+7 7772261916",
+      "shopName": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "marketName": "Талдыкорган - Центральный авторынок",
+      "boothNumber": "2-й ряд, бутик 42",
+      "storefrontPhoto": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp": "77077890369",
+      "countries": [
+        "Germany",
+        "Japan"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    },
+    {
+      "id": "shop-1784963325220",
+      "rating": 5,
+      "reviewsCount": 0,
+      "createdAt": "2026-07-25T07:08:45.220Z",
+      "phone": "+7 777 2261916",
+      "shopName": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "marketName": "Алматы - Car City (Кар Сити)",
+      "boothNumber": "2-й ряд, бутик 42",
+      "storefrontPhoto": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp": "77077890369",
+      "countries": [
+        "Germany",
+        "Japan"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "id": "req-1785774067600",
+      "status": "active",
+      "created_at": "2026-08-03T16:21:07.600Z",
+      "expires_at": "2026-08-04T16:21:07.600Z",
+      "driver_id": "usr-1785768861283",
+      "driver_phone": "+7 777 2261916",
+      "car_model": "BMW M3 f90",
+      "part_name": "руль руль",
+      "photos": [],
+      "detected_country": "Germany",
+      "detected_category": "Suspension"
+    },
+    {
+      "id": "req-1785771841821",
+      "status": "active",
+      "created_at": "2026-08-03T15:44:01.821Z",
+      "expires_at": "2026-08-04T15:44:01.822Z",
+      "driver_id": "usr-1785768861283",
+      "driver_phone": "+7 777 2261916",
+      "car_model": "тесла",
+      "part_name": "диск",
+      "photos": [],
+      "detected_country": "USA",
+      "detected_category": "Suspension"
+    },
+    {
+      "id": "req-1785771805810",
+      "status": "active",
+      "created_at": "2026-08-03T15:43:25.811Z",
+      "expires_at": "2026-08-04T15:43:25.811Z",
+      "driver_id": "usr-1785768861283",
+      "driver_phone": "+7 777 2261916",
+      "car_model": "тесла",
+      "part_name": "мотор",
+      "photos": [],
+      "detected_country": "USA",
+      "detected_category": "Suspension"
+    },
+    {
+      "id": "req-1785770484582",
+      "status": "active",
+      "created_at": "2026-08-03T15:21:24.582Z",
+      "expires_at": "2026-08-04T15:21:24.582Z",
+      "driver_id": "usr-1785768914069",
+      "driver_phone": "+7 7077890369",
+      "car_model": "джили",
+      "part_name": "бензонасос",
+      "photos": [],
+      "detected_country": "China",
+      "detected_category": "Suspension"
+    },
+    {
+      "id": "req-1785770079773",
+      "status": "active",
+      "created_at": "2026-08-03T15:14:39.773Z",
+      "expires_at": "2026-08-04T15:14:39.773Z",
+      "driver_id": "usr-1785769856146",
+      "driver_phone": "+7 7772261916",
+      "car_model": "чанган",
+      "part_name": "фары",
+      "photos": [],
+      "detected_country": "China",
+      "detected_category": "Optics"
+    },
+    {
+      "id": "req-1784963370082",
+      "status": "active",
+      "createdAt": "2026-07-25T07:09:30.082Z",
+      "expiresAt": "2026-07-26T07:09:30.082Z",
+      "phone": "+7 777 2261916",
+      "carModel": "бмв е39",
+      "partNeeded": "прямые рычяги",
+      "photos": [],
+      "origin": "Germany",
+      "category": "Suspension"
+    },
+    {
+      "id": "req-1784963167594",
+      "status": "active",
+      "createdAt": "2026-07-25T07:06:07.594Z",
+      "expiresAt": "2026-07-26T07:06:07.594Z",
+      "phone": "+7 7772261916",
+      "carModel": "тойота 30",
+      "partNeeded": "датчик распредвала",
+      "photos": [],
+      "origin": "Japan",
+      "category": "Electrical"
+    },
+    {
+      "id": "req-1",
+      "phone": "+7 701 111 22 33",
+      "carModel": "BMW X5 E70 2010",
+      "partNeeded": "Рулевая рейка гидравлическая",
+      "photos": [
+        "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80"
+      ],
+      "origin": "Germany",
+      "category": "Suspension",
+      "expiresAt": "2026-07-26T06:23:22.450Z",
+      "status": "active",
+      "createdAt": "2026-07-25T06:23:22.450Z"
+    },
+    {
+      "id": "req-2",
+      "phone": "+7 702 333 44 55",
+      "carModel": "Toyota Camry 40 2008",
+      "partNeeded": "Помпа водяная охлаждения 2.4L",
+      "photos": [],
+      "origin": "Japan",
+      "category": "Engine",
+      "expiresAt": "2026-07-26T03:38:22.450Z",
+      "status": "active",
+      "createdAt": "2026-07-25T05:53:22.450Z"
+    }
+  ],
+  "offers": [
+    {
+      "id": "off-1785774079245",
+      "created_at": "2026-08-03T16:21:19.245Z",
+      "request_id": "req-1785774067600",
+      "seller_id": "usr-1785768914069",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77077890369",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Original",
+      "brand": "BMW Genuine / TRW",
+      "price": 65326,
+      "variants": [
+        {
+          "brand": "BMW Genuine / TRW",
+          "price": 65326,
+          "condition": "New Original"
+        }
+      ]
+    },
+    {
+      "id": "off-1785773945362",
+      "created_at": "2026-08-03T16:19:05.362Z",
+      "request_id": "req-1785771841821",
+      "seller_id": "usr-1785768861283",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77779998877",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Original",
+      "brand": "Оригинал",
+      "price": 86526,
+      "variants": [
+        {
+          "brand": "Оригинал",
+          "price": 86526,
+          "condition": "New Original"
+        }
+      ]
+    },
+    {
+      "id": "off-1785772067752",
+      "created_at": "2026-08-03T15:47:47.752Z",
+      "request_id": "req-1785771841821",
+      "seller_id": "usr-1785768914069",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77077890369",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Original",
+      "brand": "Оригинал",
+      "price": 785254,
+      "variants": [
+        {
+          "brand": "Оригинал",
+          "price": 785254,
+          "condition": "New Original"
+        }
+      ]
+    },
+    {
+      "id": "off-1785771875072",
+      "created_at": "2026-08-03T15:44:35.072Z",
+      "request_id": "req-1785771805810",
+      "seller_id": "usr-1785768914069",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77779998877",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Aftermarket",
+      "brand": "Дубликат (Bosch/Depo)",
+      "price": 965262,
+      "variants": [
+        {
+          "brand": "Дубликат (Bosch/Depo)",
+          "price": 965262,
+          "condition": "New Aftermarket"
+        }
+      ]
+    },
+    {
+      "id": "off-1785770541862",
+      "created_at": "2026-08-03T15:22:21.862Z",
+      "request_id": "req-1785770484582",
+      "seller_id": "usr-1785770110618",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77779998877",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Original",
+      "brand": "Denso (Japan)",
+      "price": 154510
+    },
+    {
+      "id": "off-1785770277176",
+      "created_at": "2026-08-03T15:17:57.176Z",
+      "request_id": "req-1785770079773",
+      "seller_id": "usr-1785770110618",
+      "shop_name": "German Parts (Бутик #42)",
+      "whatsapp_phone": "77779998877",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviews_count": 0,
+      "condition": "New Aftermarket",
+      "brand": "Оригинал",
+      "price": 5000
+    },
+    {
+      "id": "off-1784963405672",
+      "createdAt": "2026-07-25T07:10:05.672Z",
+      "requestId": "req-1784963370082",
+      "shopId": "shop-1784963325220",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+7 777 2261916",
+      "whatsapp": "77077890369",
+      "marketName": "Алматы - Car City (Кар Сити)",
+      "boothNumber": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviewsCount": 0,
+      "condition": "New Original",
+      "brand": "BMW Genuine / Lemforder",
+      "price": 40000
+    },
+    {
+      "id": "off-1784963185987",
+      "createdAt": "2026-07-25T07:06:25.987Z",
+      "requestId": "req-1784963167594",
+      "shopId": "shop-1784963055333",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+7 7772261916",
+      "whatsapp": "77077890369",
+      "marketName": "Талдыкорган - Центральный авторынок",
+      "boothNumber": "2-й ряд, бутик 42",
+      "rating": 5,
+      "reviewsCount": 0,
+      "condition": "New Original",
+      "brand": "Toyota Genuine / Denso",
+      "price": 45000
+    },
+    {
+      "id": "off-1784961776463",
+      "createdAt": "2026-07-25T06:42:56.463Z",
+      "requestId": "req-1",
+      "shopId": "shop-1784961700510",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+77772261916",
+      "whatsapp": "77082294712",
+      "rating": 5,
+      "condition": "New Original",
+      "brand": "BMW Genuine / Lemforder",
+      "price": 45000
+    },
+    {
+      "id": "off-1784961725699",
+      "createdAt": "2026-07-25T06:42:05.699Z",
+      "requestId": "req-2",
+      "shopId": "shop-1784961700510",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+77772261916",
+      "whatsapp": "77772261916",
+      "rating": 5,
+      "condition": "New Original",
+      "brand": "Toyota Genuine / Denso",
+      "price": 50000
+    },
+    {
+      "id": "off-1784961667030",
+      "createdAt": "2026-07-25T06:41:07.030Z",
+      "requestId": "req-2",
+      "shopId": "shop-1",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+7 777 999 88 77",
+      "whatsapp": "77779998877",
+      "rating": 4.9,
+      "condition": "New Aftermarket",
+      "brand": "Toyota Genuine / Denso",
+      "price": 45000
+    },
+    {
+      "id": "off-1",
+      "requestId": "req-1",
+      "shopId": "shop-1",
+      "shopName": "German Parts (Бутик #42)",
+      "shopPhone": "+7 777 999 88 77",
+      "whatsapp": "77779998877",
+      "rating": 4.9,
+      "condition": "New Original",
+      "brand": "BMW Genuine",
+      "price": 185000,
+      "createdAt": "2026-07-25T06:28:22.450Z"
+    },
+    {
+      "id": "off-2",
+      "requestId": "req-1",
+      "shopId": "shop-2",
+      "shopName": "JapAuto Taldy (Бутик #18)",
+      "shopPhone": "+7 705 555 44 33",
+      "whatsapp": "77055554433",
+      "rating": 4.8,
+      "condition": "New Aftermarket",
+      "brand": "TRW German Tech",
+      "price": 110000,
+      "createdAt": "2026-07-25T06:33:22.450Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "shopId": "shop-1",
+      "driverPhone": "+7 701 111 22 33",
+      "rating": 5,
+      "text": "Отличная оригинал рейка, быстро отдали в бутики!",
+      "createdAt": "2026-07-25T05:02:05.007Z"
+    }
+  ],
+  "otpSessions": {
+    "+7 777 2261916": {
+      "code": "1914",
+      "expiresAt": 1785768884076
+    }
+  },
+  "profiles": [
+    {
+      "id": "usr-driver-1",
+      "phone": "+7 701 111 22 33",
+      "role": "driver",
+      "full_name": "Алмас Беков",
+      "created_at": "2026-08-03T14:49:02.743Z"
+    },
+    {
+      "id": "usr-seller-1",
+      "phone": "+7 777 999 88 77",
+      "role": "seller",
+      "full_name": "AutoZap Taldykorgan",
+      "created_at": "2026-08-03T14:49:02.743Z"
+    },
+    {
+      "id": "usr-1785768861283",
+      "phone": "+7 777 2261916",
+      "role": "driver",
+      "full_name": "German Parts (Бутик #42)",
+      "created_at": "2026-08-03T14:54:21.283Z"
+    },
+    {
+      "id": "usr-1785768914069",
+      "phone": "+7 7077890369",
+      "role": "seller",
+      "full_name": "German Parts (Бутик #42)",
+      "created_at": "2026-08-03T14:55:14.069Z"
+    },
+    {
+      "id": "usr-1785769662139",
+      "phone": "+7 777 226 1916",
+      "role": null,
+      "full_name": "",
+      "created_at": "2026-08-03T15:07:42.139Z"
+    },
+    {
+      "id": "usr-1785769856146",
+      "phone": "+7 7772261916",
+      "role": "driver",
+      "full_name": "Шарипов Нурасыл",
+      "created_at": "2026-08-03T15:10:56.146Z"
+    },
+    {
+      "id": "usr-1785770110618",
+      "phone": "+7 707 789 0369",
+      "role": "seller",
+      "full_name": "German Parts (Бутик #42)",
+      "created_at": "2026-08-03T15:15:10.618Z"
+    },
+    {
+      "id": "usr-1785771383537",
+      "phone": "+7 777 226191",
+      "role": null,
+      "full_name": "",
+      "created_at": "2026-08-03T15:36:23.538Z"
+    }
+  ],
+  "seller_profiles": [
+    {
+      "user_id": "usr-seller-1",
+      "shop_name": "German Parts (Бутик #42)",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "photo_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp_phone": "77779998877",
+      "countries": [
+        "Germany",
+        "Japan"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ],
+      "rating": 4.9,
+      "reviews_count": 12,
+      "online_status": true,
+      "created_at": "2026-08-03T14:49:02.743Z"
+    },
+    {
+      "rating": 5,
+      "reviews_count": 0,
+      "online_status": true,
+      "created_at": "2026-08-03T15:15:16.238Z",
+      "user_id": "usr-1785770110618",
+      "shop_name": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "photo_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp_phone": "77779998877",
+      "countries": [
+        "Germany",
+        "Japan",
+        "China"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    },
+    {
+      "rating": 5,
+      "reviews_count": 0,
+      "online_status": true,
+      "created_at": "2026-08-03T15:42:25.591Z",
+      "user_id": "usr-1785768861283",
+      "shop_name": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "photo_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp_phone": "77779998877",
+      "countries": [
+        "Germany",
+        "Japan"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    },
+    {
+      "rating": 5,
+      "reviews_count": 0,
+      "online_status": true,
+      "created_at": "2026-08-03T16:19:41.947Z",
+      "user_id": "usr-1785768914069",
+      "shop_name": "German Parts (Бутик #42)",
+      "city": "Талдыкорган",
+      "market_name": "Талдыкорган - Центральный авторынок",
+      "booth_number": "2-й ряд, бутик 42",
+      "photo_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80",
+      "whatsapp_phone": "77077890369",
+      "countries": [
+        "Germany",
+        "Japan",
+        "USA",
+        "China",
+        "Korea"
+      ],
+      "categories": [
+        "Engine",
+        "Suspension",
+        "Brakes",
+        "Electrical",
+        "Optics"
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ export default function SplashScreen({ lang, setLang, onStart }) {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 4px' }}>
       {/* Top Hero Banner */}
-      <div className="hero-banner" style={{ textAlign: 'center', padding: '28px 20px', marginBottom: '20px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#FFFFFF', borderRadius: '24px', position: 'relative', boxShadow: 'var(--shadow-md)' }}>
+      <div className="hero-banner" style={{ textAlign: 'center', padding: '32px 20px', marginBottom: '20px', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#FFFFFF', borderRadius: '24px', position: 'relative', boxShadow: 'var(--shadow-md)' }}>
         
         {/* LANDING PAGE LANGUAGE SWITCHER PILL */}
         <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
@@ -46,17 +46,13 @@ export default function SplashScreen({ lang, setLang, onStart }) {
           </button>
         </div>
 
-        <div style={{ width: '56px', height: '56px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 8px 24px var(--primary-emerald-glow)' }}>
+        <div style={{ width: '56px', height: '56px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 8px 24px var(--primary-emerald-glow)', animation: 'pulseGlow 3s infinite' }}>
           <Zap size={30} fill="#FFFFFF" />
         </div>
 
-        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '8px', lineHeight: 1.2 }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px', marginBottom: '16px', lineHeight: 1.2 }}>
           bar<span style={{ color: 'var(--primary-emerald)' }}>.go</span> — {t.welcomeTitle.replace('bar.go — ', '')}
         </h1>
-
-        <p style={{ fontSize: '14px', color: '#94A3B8', maxWidth: '600px', margin: '0 auto 16px auto', lineHeight: 1.4 }}>
-          {t.welcomeSubtitle}
-        </p>
 
         {/* Live Metrics Bar */}
         <div className="metrics-bar" style={{ justifyContent: 'center' }}>

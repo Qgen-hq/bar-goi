@@ -16,22 +16,22 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
       <header className="web-navbar">
         <div className="web-navbar-container">
           <div className="nav-logo-group" onClick={() => setActiveTab(isDriver ? 'my_requests' : 'tenders_feed')}>
-            <div style={{ width: '36px', height: '36px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Zap size={22} fill="#FFFFFF" />
+            <div style={{ width: '34px', height: '34px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Zap size={20} fill="#FFFFFF" />
             </div>
             <div>
-              <span className="nav-brand-title">Bar<span className="nav-brand-accent">Goi</span></span>
-              <span style={{ fontSize: '10px', color: '#94A3B8', display: 'block', marginTop: '-4px', fontWeight: 700 }}>
-                {currentCity} автобөлшектер
+              <span className="nav-brand-title" style={{ fontSize: '20px', lineHeight: 1 }}>Bar<span className="nav-brand-accent">Goi</span></span>
+              <span style={{ fontSize: '10px', color: '#94A3B8', display: 'block', marginTop: '1px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                {lang === 'kz' ? 'Автобөлшектер сервисі' : 'Сервис автозапчастей'}
               </span>
             </div>
           </div>
 
           {/* RIGHT SIDE GROUP: CITY SELECTOR + LANGUAGE SWITCHER + DESKTOP TABS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* CITY SELECTOR DROPDOWN */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px 8px' }}>
-              <MapPin size={14} color="var(--primary-emerald)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* COMPACT CITY SELECTOR DROPDOWN */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '3px 6px' }}>
+              <MapPin size={13} color="var(--primary-emerald)" />
               <select
                 value={currentCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
@@ -40,9 +40,10 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
                   color: '#FFFFFF',
                   border: 'none',
                   outline: 'none',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 800,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  maxWidth: '90px'
                 }}
               >
                 {KZ_CITIES.map(c => (
@@ -113,13 +114,13 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
             </div>
 
             {/* UNIVERSAL LANGUAGE SWITCHER */}
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '2px' }}>
               <button
                 type="button"
                 onClick={() => setLang('kz')}
                 style={{
-                  padding: '4px 8px',
-                  borderRadius: '8px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
                   border: 'none',
                   fontSize: '11px',
                   fontWeight: 900,
@@ -135,8 +136,8 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
                 type="button"
                 onClick={() => setLang('ru')}
                 style={{
-                  padding: '4px 8px',
-                  borderRadius: '8px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
                   border: 'none',
                   fontSize: '11px',
                   fontWeight: 900,
@@ -150,7 +151,7 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
             </div>
 
             {user && (
-              <button onClick={onLogout} className="nav-tab-btn" style={{ color: '#F87171', padding: '4px 8px' }} title={t.logoutBtn}>
+              <button onClick={onLogout} className="nav-tab-btn" style={{ color: '#F87171', padding: '4px 6px' }} title={t.logoutBtn}>
                 <LogOut size={16} />
               </button>
             )}

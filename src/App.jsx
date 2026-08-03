@@ -46,7 +46,17 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState('my_requests');
-  const [requests, setRequests] = useState([]);
+  
+  // LocalStorage Request & Offer Persistence Cache (Survives Refresh F5!)
+  const [requests, setRequests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('partdrive_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   const handleSetLang = (newLang) => {
@@ -75,6 +85,13 @@ export default function App() {
     }
   }, [profile]);
 
+  // Sync requests to LocalStorage
+  useEffect(() => {
+    if (requests && requests.length > 0) {
+      localStorage.setItem('partdrive_requests', JSON.stringify(requests));
+    }
+  }, [requests]);
+
   useEffect(() => {
     if (user?.role === 'Driver' || user?.role === 'driver') {
       setActiveTab('my_requests');
@@ -93,7 +110,19 @@ export default function App() {
 
       const res = await fetch(endpoint);
       const data = await res.json();
-      setRequests(data);
+      
+      if (Array.isArray(data)) {
+        setRequests(prev => {
+          // Merge server data with local cache
+          const merged = [...data];
+          prev.forEach(localItem => {
+            if (!merged.some(m => m.id === localItem.id)) {
+              merged.unshift(localItem);
+            }
+          });
+          return merged;
+        });
+      }
     } catch (e) {
       console.error('Error fetching requests', e);
     } finally {
@@ -163,7 +192,6 @@ export default function App() {
     };
   }, []);
 
-  // Direct All-in-One Role Selection Start
   const handleStartRoleFlow = (selectedRole) => {
     const newUser = { id: 'usr-' + Date.now(), role: selectedRole };
     setUser(newUser);
@@ -187,7 +215,15 @@ export default function App() {
   };
 
   const handleRequestSubmitted = (newReq) => {
-    setRequests(prev => [{ ...newReq, city: selectedCity }, ...prev]);
+    const enrichedReq = {
+      ...newReq,
+      city: selectedCity,
+      driverPhone: user?.phone || newReq.driverPhone || '+7 701 111 22 33',
+      driver_phone: user?.phone || newReq.driverPhone || '+7 701 111 22 33',
+      createdAgo: 'Только что'
+    };
+
+    setRequests(prev => [enrichedReq, ...prev]);
     setActiveTab('my_requests');
   };
 

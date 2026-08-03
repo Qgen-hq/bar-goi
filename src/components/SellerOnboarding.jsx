@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Globe, CheckSquare, Square, Save, CheckCircle2, Camera, Trash2, MapPin, AlertCircle, ArrowLeft, Phone } from 'lucide-react';
+import { Store, Globe, CheckSquare, Square, Save, CheckCircle2, Camera, Trash2, MapPin, AlertCircle, ArrowLeft, Phone, Shield } from 'lucide-react';
 import { CAR_ORIGINS, PART_CATEGORIES } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import { KZ_CITIES } from './DriverOnboarding';
@@ -63,6 +63,11 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       return;
     }
 
+    if (countries.length === 0 || categories.length === 0) {
+      setError(lang === 'kz' ? 'Кемінде 1 елді және 1 бөлшек категориясын таңдаңыз' : 'Выберите хотя бы 1 страну автопроизводителей и 1 категорию запчастей');
+      return;
+    }
+
     setError('');
     setSaving(true);
 
@@ -122,7 +127,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
   };
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '10px 0' }}>
+    <div style={{ maxWidth: '750px', margin: '0 auto', padding: '10px 0' }}>
       {/* Header Title Card */}
       <div style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#FFFFFF', padding: '24px 20px', borderRadius: '24px', marginBottom: '20px', boxShadow: 'var(--shadow-md)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -173,8 +178,9 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* SECTION 1: BOOTH PROFILE & LOCATION */}
         <div className="card">
-          <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '14px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '14px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <MapPin size={18} color="var(--primary-emerald)" /> 1. Профиль Автобутика и Контакты
           </h3>
 
@@ -264,12 +270,16 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
           </div>
         </div>
 
+        {/* SECTION 2: COUNTRIES OF CAR MANUFACTURERS */}
         <div className="card">
-          <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '8px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Globe size={18} /> {t.countriesTitle} (Специализация)
+          <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '6px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Globe size={18} color="#2563EB" /> 2. Страны автопроизводителей (Специализация)
           </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Выберите марки авто, для которых вы продаете автозапчасти в вашем бутике:
+          </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
             {Object.values(CAR_ORIGINS).map(origin => {
               const selected = countries.includes(origin.id);
               const label = t['country' + origin.id] || origin.name;
@@ -278,21 +288,62 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
                   key={origin.id}
                   onClick={() => toggleCountry(origin.id)}
                   style={{
-                    padding: '10px 12px',
-                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
                     border: selected ? '2px solid var(--primary-emerald)' : '1px solid var(--border-color)',
                     background: selected ? 'var(--primary-emerald-light)' : '#F8FAFC',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     fontSize: '13px',
-                    color: selected ? 'var(--dark-slate)' : 'var(--text-muted)'
+                    color: selected ? 'var(--dark-slate)' : 'var(--text-muted)',
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   <span>{label}</span>
-                  {selected ? <CheckSquare size={16} color="var(--primary-emerald)" /> : <Square size={16} color="#CBD5E1" />}
+                  {selected ? <CheckSquare size={18} color="var(--primary-emerald)" /> : <Square size={18} color="#CBD5E1" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SECTION 3: PART CATEGORIES IN STOCK */}
+        <div className="card">
+          <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '6px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Shield size={18} color="var(--primary-emerald)" /> 3. Категории автозапчастей в наличии
+          </h3>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Укажите детали (Ходовка, Оптика, Двигатель), которые есть у вас в наличии:
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            {Object.values(PART_CATEGORIES).map(cat => {
+              const selected = categories.includes(cat.id);
+              const label = t['cat' + cat.id] || cat.name;
+              return (
+                <div
+                  key={cat.id}
+                  onClick={() => toggleCategory(cat.id)}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: selected ? '2px solid var(--primary-emerald)' : '1px solid var(--border-color)',
+                    background: selected ? 'var(--primary-emerald-light)' : '#F8FAFC',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontWeight: 800,
+                    fontSize: '12px',
+                    color: selected ? 'var(--dark-slate)' : 'var(--text-muted)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span>{label}</span>
+                  {selected ? <CheckSquare size={18} color="var(--primary-emerald)" /> : <Square size={18} color="#CBD5E1" />}
                 </div>
               );
             })}

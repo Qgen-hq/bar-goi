@@ -196,13 +196,13 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
         )}
       </div>
 
-      {/* PROMINENT LOGOUT & ROLE SWITCH BUTTON */}
+      {/* STRICT 'ВЫЙТИ' LOGOUT BUTTON */}
       <button
         onClick={onLogout}
         className="btn-secondary"
         style={{ color: '#EF4444', borderColor: '#FCA5A5', padding: '14px', background: '#FEF2F2', fontSize: '15px', fontWeight: 800 }}
       >
-        <LogOut size={18} /> {lang === 'kz' ? 'Жүйеден шығу / Рольді ауыстыру' : 'Выйти из аккаунта / Сменить роль'}
+        <LogOut size={18} /> {lang === 'kz' ? 'Шығу' : 'Выйти'}
       </button>
     </div>
   );

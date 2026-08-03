@@ -1,59 +1,35 @@
 import React from 'react';
-import { ShoppingBag, PlusCircle, User, Store, LogOut, Zap, Shield, Sparkles, MessageSquare, MapPin } from 'lucide-react';
+import { ShoppingBag, PlusCircle, User, Store, LogOut, Zap, MessageSquare } from 'lucide-react';
 import { translations } from '../i18n/translations';
-import { KZ_CITIES } from './DriverOnboarding';
 
-export default function WebLayout({ role, activeTab, setActiveTab, user, selectedCity, setSelectedCity, lang, setLang, onLogout, children }) {
+export default function WebLayout({ role, activeTab, setActiveTab, user, lang, setLang, onLogout, children }) {
   const t = translations[lang || 'ru'];
   const isDriver = role === 'Driver' || role === 'driver';
   const isSeller = role === 'Seller' || role === 'seller';
 
-  const currentCity = selectedCity || user?.city || 'Талдыкорган';
-
   return (
     <div className="web-app-canvas">
-      {/* GLASSMORPHIC TOP NAVBAR */}
+      {/* GLASSMORPHIC SPACIOUS TOP NAVBAR */}
       <header className="web-navbar">
         <div className="web-navbar-container">
+
+          {/* LEFT: ANIMATED BARGOI SVG LOGO & TITLE */}
           <div className="nav-logo-group" onClick={() => setActiveTab(isDriver ? 'my_requests' : 'tenders_feed')}>
-            <div style={{ width: '34px', height: '34px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Zap size={20} fill="#FFFFFF" />
+            <div style={{ width: '40px', height: '40px', background: 'var(--primary-emerald)', color: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 14px var(--primary-emerald-glow)', animation: 'pulseGlow 3s infinite' }}>
+              <Zap size={24} fill="#FFFFFF" />
             </div>
             <div>
-              <span className="nav-brand-title" style={{ fontSize: '20px', lineHeight: 1 }}>Bar<span className="nav-brand-accent">Goi</span></span>
-              <span style={{ fontSize: '10px', color: '#94A3B8', display: 'block', marginTop: '1px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              <span className="nav-brand-title" style={{ fontSize: '22px', lineHeight: 1 }}>
+                Bar<span className="nav-brand-accent">Goi</span>
+              </span>
+              <span style={{ fontSize: '11px', color: '#94A3B8', display: 'block', marginTop: '2px', fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {lang === 'kz' ? 'Автобөлшектер сервисі' : 'Сервис автозапчастей'}
               </span>
             </div>
           </div>
 
-          {/* RIGHT SIDE GROUP: CITY SELECTOR + LANGUAGE SWITCHER + DESKTOP TABS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* COMPACT CITY SELECTOR DROPDOWN */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '3px 6px' }}>
-              <MapPin size={13} color="var(--primary-emerald)" />
-              <select
-                value={currentCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  maxWidth: '90px'
-                }}
-              >
-                {KZ_CITIES.map(c => (
-                  <option key={c} value={c} style={{ background: '#0F172A', color: '#FFFFFF' }}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+          {/* RIGHT SIDE GROUP: DESKTOP NAVIGATION + LANGUAGE SWITCHER + STRICT 'ВЫЙТИ' BUTTON */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {/* Desktop Navigation Items */}
             <div className="nav-tabs-desktop">
               {isDriver && (
@@ -114,19 +90,20 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
             </div>
 
             {/* UNIVERSAL LANGUAGE SWITCHER */}
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '2px' }}>
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', padding: '3px' }}>
               <button
                 type="button"
                 onClick={() => setLang('kz')}
                 style={{
-                  padding: '3px 8px',
-                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
                   border: 'none',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 900,
                   cursor: 'pointer',
                   background: lang === 'kz' ? 'var(--primary-emerald)' : 'transparent',
-                  color: lang === 'kz' ? '#FFFFFF' : '#94A3B8'
+                  color: lang === 'kz' ? '#FFFFFF' : '#94A3B8',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 KZ
@@ -136,23 +113,43 @@ export default function WebLayout({ role, activeTab, setActiveTab, user, selecte
                 type="button"
                 onClick={() => setLang('ru')}
                 style={{
-                  padding: '3px 8px',
-                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
                   border: 'none',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 900,
                   cursor: 'pointer',
                   background: lang === 'ru' ? 'var(--primary-emerald)' : 'transparent',
-                  color: lang === 'ru' ? '#FFFFFF' : '#94A3B8'
+                  color: lang === 'ru' ? '#FFFFFF' : '#94A3B8',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 RU
               </button>
             </div>
 
+            {/* STRICT 'ВЫЙТИ' LOGOUT BUTTON */}
             {user && (
-              <button onClick={onLogout} className="nav-tab-btn" style={{ color: '#F87171', padding: '4px 6px' }} title={t.logoutBtn}>
-                <LogOut size={16} />
+              <button
+                onClick={onLogout}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  border: '1px solid #EF4444',
+                  color: '#F87171',
+                  padding: '6px 14px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease'
+                }}
+                title={lang === 'kz' ? 'Шығу' : 'Выйти'}
+              >
+                <LogOut size={15} />
+                <span>{lang === 'kz' ? 'Шығу' : 'Выйти'}</span>
               </button>
             )}
           </div>

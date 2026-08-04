@@ -354,13 +354,22 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
                 const carTitle = tender.carModel || tender.car_model || 'Автомобиль';
                 const partTitle = tender.partNeeded || tender.part_name || 'Автозапчасть';
                 const uniqueKey = tender.id ? `${tender.id}-${index}` : `seller-tender-${index}`;
+                const reqOrigin = tender.origin || tender.detected_country || 'Unknown';
+                const countryName = t['country' + reqOrigin] || tender.originInfo?.name || reqOrigin;
+                const isTargeted = shopCountries.includes(reqOrigin);
                 
                 return (
-                  <div key={uniqueKey} className="card">
+                  <div key={uniqueKey} className="card" style={{ border: isTargeted ? '2px solid var(--primary-emerald)' : '1px solid var(--border-color)', position: 'relative' }}>
+                    {isTargeted && (
+                      <div style={{ position: 'absolute', top: '-12px', right: '16px', background: 'var(--primary-emerald)', color: '#fff', fontSize: '11px', fontWeight: 900, padding: '3px 10px', borderRadius: '12px', boxShadow: '0 4px 12px var(--primary-emerald-glow)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        🎯 {lang === 'kz' ? 'Сіздің мамандығыңыз!' : 'Для вашего профиля'} ({countryName})
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                       <div>
                         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-emerald)', background: 'var(--primary-emerald-light)', padding: '3px 10px', borderRadius: '12px' }}>
-                          {t['country' + (tender.origin || tender.detected_country)] || tender.originInfo?.name || tender.origin || 'Импорт'}
+                          {countryName}
                         </span>
                         <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--dark-slate)', margin: '4px 0 2px 0' }}>
                           {carTitle}
@@ -375,19 +384,43 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
                       <span style={{ fontSize: '12px', background: '#F1F5F9', padding: '4px 10px', borderRadius: '14px', color: '#475569', fontWeight: 700 }}>
                         Категория: {t['cat' + (tender.category || tender.detected_category)] || tender.categoryInfo?.name || tender.category || 'Запчасть'}
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => handleOpenOfferSheet(tender)}
-                      className="btn-primary"
-                      style={{ fontSize: '14px', padding: '12px' }}
-                    >
-                      <Send size={16} /> {lang === 'kz' ? 'Баға нұсқаларын ұсыну (1-3 марка)' : 'Указать варианты марок и цен (до 3)'}
-                    </button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px' }}>
+                      <button
+                        onClick={() => handleOpenOfferSheet(tender)}
+                        className="btn-primary"
+                        style={{ fontSize: '14px', padding: '12px' }}
+                      >
+                        <Send size={16} /> {lang === 'kz' ? 'Баға нұсқаларын ұсыну' : 'Указать варианты марок и цен (до 3)'}
+                      </button>
+
+                      <a
+                        href={safeWhatsAppUrl(shop?.whatsapp_phone || '77779998877', `🚘 Запрос на bar.go!\nАвто: *${carTitle}*\nДеталь: *${partTitle}*\n\nОтветить за 10 секунд: https://bar-go.vercel.app`)}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          background: '#25D366',
+                          color: '#FFFFFF',
+                          padding: '12px 14px',
+                          borderRadius: 'var(--radius-md)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          textDecoration: 'none',
+                          fontSize: '13px',
+                          fontWeight: 800
+                        }}
+                        title="Уведомить / Открыть в WhatsApp"
+                      >
+                        <MessageSquare size={16} />
+                      </a>
+                    </div>
                   </div>
                 );
               })

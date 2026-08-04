@@ -1,18 +1,35 @@
 import React, { useState } from 'react';
-import { User, Phone, MapPin, ShoppingBag, ShieldCheck, LogOut, CheckCircle2, Clock, Edit3, Save, X, AlertCircle } from 'lucide-react';
+import { User, Phone, MapPin, ShoppingBag, ShieldCheck, LogOut, CheckCircle2, Clock, Edit3, Save, X, AlertCircle, Car, Plus, Trash2, Key } from 'lucide-react';
 import { translations } from '../i18n/translations';
 import { KZ_CITIES } from './DriverOnboarding';
+import { safeParseJSON } from '../utils/security';
+
+const GARAGE_KEY = 'partdrive_garage';
+
+function loadGarage() {
+  return safeParseJSON(localStorage.getItem(GARAGE_KEY), []);
+}
+
+function saveGarageToStorage(garage) {
+  localStorage.setItem(GARAGE_KEY, JSON.stringify(garage));
+}
 
 export default function DriverProfile({ user, requests, lang, onLogout, onUpdateProfile }) {
   const t = translations[lang || 'ru'];
 
   const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState(user?.full_name || user?.fullName || 'Арман Жумабеков');
-  const [phone, setPhone] = useState(user?.phone || '+7 701 111 22 33');
+  const [fullName, setFullName] = useState(user?.full_name || user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [city, setCity] = useState(user?.city || 'Талдыкорган');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  const driverRequests = (requests || []).filter(r => 
+  // Garage State
+  const [garage, setGarage] = useState(() => loadGarage());
+  const [showAddCar, setShowAddCar] = useState(false);
+  const [newCarName, setNewCarName] = useState('');
+  const [newCarVin, setNewCarVin] = useState('');
+
+  const driverRequests = (requests || []).filter(r =>
     !user?.phone || r.driverPhone === user.phone || r.driver_phone === user.phone
   );
 
@@ -37,6 +54,27 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
     setTimeout(() => setSavedSuccess(false), 2500);
   };
 
+  const handleAddCar = () => {
+    if (!newCarName.trim()) return;
+    const newCar = {
+      id: 'car-' + Date.now(),
+      name: newCarName.trim(),
+      vin: newCarVin.trim()
+    };
+    const updated = [newCar, ...garage];
+    setGarage(updated);
+    saveGarageToStorage(updated);
+    setNewCarName('');
+    setNewCarVin('');
+    setShowAddCar(false);
+  };
+
+  const handleDeleteCar = (carId) => {
+    const updated = garage.filter(c => c.id !== carId);
+    setGarage(updated);
+    saveGarageToStorage(updated);
+  };
+
   return (
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '10px 0' }}>
       {savedSuccess && (
@@ -47,8 +85,6 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
 
       {/* Profile Header Card */}
       <div className="card" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '24px', position: 'relative' }}>
-        
-        {/* EDIT PROFILE BUTTON */}
         <button
           onClick={() => setIsEditing(!isEditing)}
           style={{
@@ -93,7 +129,6 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
             </div>
           </div>
         ) : (
-          /* INLINE EDIT FORM */
           <form onSubmit={handleSaveEdit} style={{ textAlign: 'left', paddingTop: '10px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '14px', color: '#FFFFFF' }}>
               {lang === 'kz' ? 'Профиль мәліметтерін өңдеу' : 'Редактирование данных водителя'}
@@ -106,6 +141,7 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
                 className="form-input"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                placeholder="Введите ваше имя"
                 required
               />
             </div>
@@ -117,6 +153,7 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
                 className="form-input"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                placeholder="+7 (7XX) XXX-XX-XX"
                 required
               />
             </div>
@@ -164,6 +201,104 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
         </div>
       </div>
 
+      {/* ====== MY GARAGE SECTION ====== */}
+      <div className="card" style={{ border: '2px solid var(--primary-emerald)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Car size={18} color="var(--primary-emerald)" />
+            {lang === 'kz' ? '🚗 Менің Гаражым' : '🚗 Мой Гараж'}
+          </h3>
+          <button
+            onClick={() => setShowAddCar(!showAddCar)}
+            style={{
+              background: 'var(--primary-emerald-light)',
+              border: '1px solid var(--primary-emerald)',
+              color: 'var(--primary-emerald)',
+              padding: '6px 12px',
+              borderRadius: '10px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <Plus size={14} /> {showAddCar ? (lang === 'kz' ? 'Жабу' : 'Отмена') : (lang === 'kz' ? '+ Авто қосу' : '+ Добавить авто')}
+          </button>
+        </div>
+
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.4 }}>
+          {lang === 'kz' ? 'Сақталған автокөліктер сұраныс формасында жылдам таңдаулы батырмалар ретінде шығады' : 'Сохранённые авто появятся в форме запроса как кнопки быстрого выбора — найти деталь можно за 3 секунды!'}
+        </p>
+
+        {/* Add Car Form */}
+        {showAddCar && (
+          <div style={{ background: '#F8FAFC', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '14px', marginBottom: '14px' }}>
+            <div className="form-group">
+              <label className="form-label">{lang === 'kz' ? 'Марка және үлгі (мысалы: Toyota Camry 40)' : 'Марка и модель (например: Toyota Camry 40)'}</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newCarName}
+                onChange={(e) => setNewCarName(e.target.value)}
+                placeholder="Toyota Camry 40 / Geely Monjaro / BMW X5"
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label className="form-label">{lang === 'kz' ? 'VIN-код (міндетті емес)' : 'VIN-код (необязательно)'}</label>
+              <input
+                type="text"
+                className="form-input"
+                value={newCarVin}
+                onChange={(e) => setNewCarVin(e.target.value.toUpperCase())}
+                placeholder="JTD... (необязательно)"
+                maxLength={17}
+                style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '1px' }}
+              />
+            </div>
+            <button
+              onClick={handleAddCar}
+              className="btn-primary"
+              disabled={!newCarName.trim()}
+              style={{ padding: '10px', fontSize: '13px' }}
+            >
+              <Car size={16} /> {lang === 'kz' ? 'Гаражға қосу' : 'Добавить в Гараж'}
+            </button>
+          </div>
+        )}
+
+        {/* Garage Cars List */}
+        {garage.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '13px', lineHeight: 1.5 }}>
+            🚗 {lang === 'kz' ? 'Гаражда автокөлік жоқ. «+ Авто қосу» басыңыз!' : 'Гараж пустой. Нажмите «+ Добавить авто», чтобы сохранить ваши машины!'}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {garage.map((car) => (
+              <div key={car.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8FAFC', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 14px' }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Car size={15} color="var(--primary-emerald)" /> {car.name}
+                  </div>
+                  {car.vin && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Key size={11} /> VIN: {car.vin}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDeleteCar(car.id)}
+                  style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#EF4444', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* History of Requests */}
       <div className="card">
         <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '14px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -172,7 +307,7 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
         </h3>
 
         {driverRequests.length === 0 ? (
-          <div style={{ textTransform: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '13px' }}>
+          <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '13px' }}>
             {lang === 'kz' ? 'Әлі белсенді сұраныстар жоқ' : 'У вас пока нет активных запросов.'}
           </div>
         ) : (
@@ -196,7 +331,7 @@ export default function DriverProfile({ user, requests, lang, onLogout, onUpdate
         )}
       </div>
 
-      {/* STRICT 'ВЫЙТИ' LOGOUT BUTTON */}
+      {/* LOGOUT BUTTON */}
       <button
         onClick={onLogout}
         className="btn-secondary"

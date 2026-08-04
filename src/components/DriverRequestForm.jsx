@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Trash2, Sparkles, Send, CheckCircle2, AlertCircle, Wrench, Shield, Mic } from 'lucide-react';
+import { Camera, Trash2, Sparkles, Send, CheckCircle2, AlertCircle, Mic, Car, Bell, MessageSquare } from 'lucide-react';
 import { autoClassify } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import VoiceInput from './VoiceInput';
+import { safeParseJSON, safeWhatsAppUrl } from '../utils/security';
+
+const GARAGE_KEY = 'partdrive_garage';
 
 export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
   const t = translations[lang || 'ru'];
@@ -12,8 +15,10 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
   const [liveClassification, setLiveClassification] = useState(null);
+
+  // Load garage cars saved by user
+  const [garageCars, setGarageCars] = useState(() => safeParseJSON(localStorage.getItem(GARAGE_KEY), []));
 
   useEffect(() => {
     if (carModel || partNeeded) {
@@ -23,11 +28,6 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
       setLiveClassification(null);
     }
   }, [carModel, partNeeded]);
-
-  const applyPreset = (car, part) => {
-    setCarModel(car);
-    setPartNeeded(part);
-  };
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -74,34 +74,26 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
       const data = await res.json();
       setLoading(false);
 
-      if (res.ok && data.success) {
-        setSuccess(true);
-        setCarModel('');
-        setPartNeeded('');
-        setPhotos([]);
-        onRequestSubmitted(data.request);
-        setTimeout(() => setSuccess(false), 3000);
-      } else {
-        const fallbackReq = {
-          id: 'req-' + Date.now(),
-          carModel: carModel.trim(),
-          partNeeded: partNeeded.trim(),
-          part_name: partNeeded.trim(),
-          photos,
-          origin: liveClassification?.origin?.id || 'Germany',
-          category: liveClassification?.category?.id || 'Suspension',
-          originInfo: liveClassification?.origin || { name: 'Германия' },
-          categoryInfo: liveClassification?.category || { name: 'Подвеска' },
-          expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-          offers: []
-        };
-        setSuccess(true);
-        setCarModel('');
-        setPartNeeded('');
-        setPhotos([]);
-        onRequestSubmitted(fallbackReq);
-        setTimeout(() => setSuccess(false), 3000);
-      }
+      const submittedReq = (res.ok && data.success) ? data.request : {
+        id: 'req-' + Date.now(),
+        carModel: carModel.trim(),
+        partNeeded: partNeeded.trim(),
+        part_name: partNeeded.trim(),
+        photos,
+        origin: liveClassification?.origin?.id || 'Germany',
+        category: liveClassification?.category?.id || 'Suspension',
+        originInfo: liveClassification?.origin || { name: 'Германия' },
+        categoryInfo: liveClassification?.category || { name: 'Подвеска' },
+        expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+        offers: []
+      };
+
+      setSuccess(true);
+      setCarModel('');
+      setPartNeeded('');
+      setPhotos([]);
+      onRequestSubmitted(submittedReq);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setLoading(false);
       const fallbackReq = {
@@ -126,6 +118,11 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
     }
   };
 
+  // WhatsApp notification link for sellers (pre-formatted alert message)
+  const waAlertText = carModel && partNeeded
+    ? `🚘 Новый запрос на bar.go!\n${user?.city || 'Талдыкорган'}: *${carModel.trim()}* — *${partNeeded.trim()}*\n\nОтветьте водителю за 10 секунд: https://bar-go.vercel.app`
+    : '';
+
   return (
     <div style={{ position: 'sticky', top: '90px' }}>
       {/* Header Title Card */}
@@ -137,24 +134,6 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
         <p style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.4 }}>
           {t.smartSearchDesc}
         </p>
-
-        {/* 1-Click Test Presets */}
-        <div style={{ marginTop: '14px' }}>
-          <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase', marginBottom: '6px' }}>
-            Быстро запустить примери:
-          </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => applyPreset('BMW X5 2010', 'Рулевая рейка')} className="preset-pill">
-              BMW X5 - Рейка
-            </button>
-            <button type="button" onClick={() => applyPreset('Toyota Camry 40', 'Помпа водяная')} className="preset-pill">
-              Camry 40 - Помпа
-            </button>
-            <button type="button" onClick={() => applyPreset('Haval F7 2021', 'Передний бампер')} className="preset-pill">
-              Haval F7 - Бампер
-            </button>
-          </div>
-        </div>
       </div>
 
       {success && (
@@ -170,6 +149,40 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
       )}
 
       <form onSubmit={handleSubmit} className="card">
+        {/* My Garage Quick-Select Pills */}
+        {garageCars.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Car size={12} /> {lang === 'kz' ? '🚗 Менің Гаражым — жылдам таңдау:' : '🚗 Мой Гараж — выбор авто за 1 клик:'}
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {garageCars.map(car => (
+                <button
+                  key={car.id}
+                  type="button"
+                  onClick={() => setCarModel(car.name)}
+                  style={{
+                    background: carModel === car.name ? 'var(--primary-emerald-light)' : '#F1F5F9',
+                    border: carModel === car.name ? '1.5px solid var(--primary-emerald)' : '1px solid var(--border-color)',
+                    color: carModel === car.name ? 'var(--primary-emerald)' : '#475569',
+                    padding: '5px 12px',
+                    borderRadius: '14px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Car size={11} /> {car.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <label className="form-label" style={{ marginBottom: 0 }}>{t.carModelLabel}</label>
@@ -263,6 +276,23 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
         <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '16px', fontSize: '16px' }}>
           <Send size={18} /> {loading ? '...' : t.publishTenderBtn}
         </button>
+
+        {/* WhatsApp Seller Notification Helper — shown after fields are filled */}
+        {carModel && partNeeded && (
+          <div style={{ marginTop: '12px', background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: '12px', padding: '12px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#166534', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Bell size={12} /> {lang === 'kz' ? 'Бутик иелерін WhatsApp арқылы хабарландыру:' : 'Уведомить бутики в WhatsApp об этом запросе:'}
+            </div>
+            <a
+              href={safeWhatsAppUrl('77779998877', waAlertText)}
+              target="_blank"
+              rel="noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#25D366', color: '#fff', padding: '7px 14px', borderRadius: '10px', textDecoration: 'none', fontSize: '12px', fontWeight: 800 }}
+            >
+              <MessageSquare size={13} /> {lang === 'kz' ? 'WhatsApp арқылы жіберу' : 'Отправить уведомление в WhatsApp'}
+            </a>
+          </div>
+        )}
       </form>
     </div>
   );

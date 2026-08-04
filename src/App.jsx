@@ -178,11 +178,18 @@ export default function App() {
   };
 
   const handleOnboardingComplete = (updatedUser, updatedProfile) => {
-    if (updatedUser) setUser(updatedUser);
-    if (updatedProfile) setProfile(updatedProfile);
-    if (updatedUser?.city) handleSetCity(updatedUser.city);
+    const rawRole = updatedUser?.role || user?.role || (updatedProfile?.shop_name ? 'seller' : 'driver');
+    const finalRole = String(rawRole).toLowerCase();
+    const finalUser = { ...(updatedUser || user || {}), role: finalRole };
+
+    setUser(finalUser);
+    setProfile(updatedProfile);
+    localStorage.setItem('partdrive_user', JSON.stringify(finalUser));
+    localStorage.setItem('partdrive_profile', JSON.stringify(updatedProfile));
+
+    if (finalUser?.city) handleSetCity(finalUser.city);
     setAuthStep('MAIN');
-    setActiveTab(updatedUser?.role === 'seller' ? 'tenders_feed' : 'my_requests');
+    setActiveTab(finalRole === 'seller' ? 'tenders_feed' : 'my_requests');
   };
 
   const handleLogout = () => {

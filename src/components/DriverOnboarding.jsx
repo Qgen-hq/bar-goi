@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Phone, MapPin, CheckCircle2, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { translations } from '../i18n/translations';
+import { supabase } from '../lib/supabase';
 
 export const KZ_CITIES = [
   'Талдыкорган',
@@ -48,28 +49,25 @@ export default function DriverOnboarding({ user, lang, onSaveProfile }) {
     };
 
     try {
-      const res = await fetch('/api/auth/complete-onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: driverPayload.id,
+      const { data, error: supaErr } = await supabase
+        .from('profiles')
+        .upsert({
+          id: driverPayload.id,
+          phone: driverPayload.phone,
           role: 'driver',
-          driverData: {
-            fullName: fullName.trim(),
-            phone: phone.trim(),
-            city
-          }
-        })
-      });
-      const data = await res.json();
-      setLoading(false);
+          full_name: driverPayload.full_name,
+          city: driverPayload.city
+        }, { onConflict: 'id' })
+        .select()
+        .single();
 
-      if (res.ok && data.success) {
-        onSaveProfile(data.profile || driverPayload, data.profile || driverPayload);
-      } else {
-        onSaveProfile(driverPayload, driverPayload);
-      }
+      if (supaErr) console.error('Driver profile save error:', supaErr.message);
+
+      setLoading(false);
+      const finalProfile = data || driverPayload;
+      onSaveProfile(finalProfile, finalProfile);
     } catch (err) {
+      console.error('Driver onboarding save error:', err);
       setLoading(false);
       onSaveProfile(driverPayload, driverPayload);
     }

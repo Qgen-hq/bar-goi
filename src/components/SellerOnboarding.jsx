@@ -4,6 +4,7 @@ import { CAR_ORIGINS, PART_CATEGORIES } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import { KZ_CITIES } from './DriverOnboarding';
 import { safeWhatsAppUrl } from '../utils/security';
+import { supabase } from '../lib/supabase';
 
 const MARKETS_LIST = [
   'Талдыкорган - Центральный авторынок',
@@ -78,59 +79,52 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
     setError('');
     setSaving(true);
 
-    const fallbackShop = {
+    const sellerData = {
       user_id: user?.id || 'usr-seller-' + Date.now(),
       shop_name: shopName.trim(),
-      shopName: shopName.trim(),
-      city,
+      city: city || 'Талдыкорган',
       market_name: marketName,
-      marketName,
       booth_number: boothNumber.trim(),
-      boothNumber: boothNumber.trim(),
       photo_url: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
-      storefrontPhoto: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
-      whatsapp_phone: phone.trim(),
-      whatsapp: phone.trim(),
+      whatsapp_phone: phone.trim().replace(/\D/g, ''),
       countries,
       categories,
-      whatsapp_alerts: whatsappAlertsEnabled,
-      rating: 5.0,
-      reviews_count: shop?.reviews_count || 1
+      rating: shop?.rating || 5.0,
+      reviews_count: shop?.reviews_count || 1,
+      online_status: true,
+      created_at: new Date().toISOString()
     };
 
     try {
-      const res = await fetch('/api/auth/complete-onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: fallbackShop.user_id,
-          role: 'seller',
-          sellerData: {
-            shopName: shopName.trim(),
-            city,
-            marketName,
-            boothNumber: boothNumber.trim(),
-            storefrontPhoto: fallbackShop.photo_url,
-            whatsappPhone: phone.trim(),
-            countries,
-            categories
-          }
-        })
-      });
-      const data = await res.json();
-      setSaving(false);
+      // Save directly to Supabase — no Express server dependency
+      const { data: savedSeller, error: supaErr } = await supabase
+        .from('seller_profiles')
+        .upsert(sellerData, { onConflict: 'user_id' })
+        .select()
+        .single();
 
-      if (res.ok && data.success) {
-        setSavedSuccess(true);
-        onSaveShop(data.sellerProfile || fallbackShop);
-      } else {
-        setSavedSuccess(true);
-        onSaveShop(fallbackShop);
-      }
-    } catch (err) {
+      if (supaErr) console.error('Supabase seller profile save error:', supaErr.message);
+
+      // Update profiles table role to seller
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: sellerData.user_id,
+          phone: sellerData.whatsapp_phone || user?.phone || '',
+          role: 'seller',
+          full_name: sellerData.shop_name,
+          city: sellerData.city
+        }, { onConflict: 'id' });
+
       setSaving(false);
       setSavedSuccess(true);
-      onSaveShop(fallbackShop);
+      const finalShop = savedSeller || sellerData;
+      onSaveShop(finalShop);
+    } catch (err) {
+      console.error('Onboarding save error:', err);
+      setSaving(false);
+      setSavedSuccess(true);
+      onSaveShop(sellerData);
     }
   };
 

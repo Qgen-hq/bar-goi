@@ -11,6 +11,7 @@ import SellerTendersFeed from './components/SellerTendersFeed';
 import SellerMyOffers from './components/SellerMyOffers';
 import AuthModal from './components/AuthModal';
 import { safeParseJSON } from './utils/security';
+import { supabase } from './lib/supabase';
 
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('partdrive_lang') || 'ru');
@@ -88,26 +89,28 @@ export default function App() {
     setLoadingRequests(true);
     try {
       const isDriver = (user?.role === 'Driver' || user?.role === 'driver');
-      const endpoint = isDriver && user?.phone
-        ? `/api/driver/my-requests/${encodeURIComponent(user.phone)}`
-        : '/api/requests';
+      const now = new Date().toISOString();
 
-      const res = await fetch(endpoint);
-      const data = await res.json();
-      
+      // Direct Supabase query — works on ALL devices without Express server
+      let query = supabase
+        .from('requests')
+        .select('*, offers(*)')
+        .eq('status', 'active')
+        .gt('expires_at', now)
+        .order('created_at', { ascending: false });
+
+      if (isDriver && user?.phone) {
+        query = query.eq('driver_phone', user.phone);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
       if (Array.isArray(data)) {
-        setRequests(prev => {
-          const merged = [...data];
-          prev.forEach(localItem => {
-            if (!merged.some(m => m.id === localItem.id)) {
-              merged.unshift(localItem);
-            }
-          });
-          return merged;
-        });
+        setRequests(data);
       }
     } catch (e) {
-      console.error('Error fetching requests', e);
+      console.error('Error fetching requests from Supabase:', e);
     } finally {
       setLoadingRequests(false);
     }

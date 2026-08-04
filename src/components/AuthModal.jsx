@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import BottomSheet from './BottomSheet';
 import { Phone, AlertCircle, ArrowRight } from 'lucide-react';
 import { translations } from '../i18n/translations';
+import { supabase } from '../lib/supabase';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess, intentRole, lang }) {
   const t = translations[lang || 'ru'];
-  const [phone, setPhone] = useState('+7 777 999 88 77');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!phone || phone.length < 10) {
+    const cleanPhone = phone.trim();
+    if (!cleanPhone || cleanPhone.length < 10) {
       setError(lang === 'kz' ? 'Дұрыс телефон нөмірін енгізіңіз' : 'Введите корректный номер телефона');
       return;
     }
@@ -19,26 +21,68 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, intentRole, 
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, intentRole })
-      });
-      const data = await res.json();
-      setLoading(false);
+      // Direct Supabase lookup — no Express server needed
+      let { data: profile, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('phone', cleanPhone)
+        .maybeSingle();
 
-      if (res.ok && data.success) {
-        onAuthSuccess(data);
-        onClose();
-      } else {
-        setError(data.error || 'Ошибка входа по номеру');
+      if (fetchErr) throw fetchErr;
+
+      // Create profile if not exists
+      if (!profile) {
+        const newId = 'usr-' + Date.now();
+        const targetRole = intentRole === 'seller' ? 'seller' : 'driver';
+        const { data: created, error: insertErr } = await supabase
+          .from('profiles')
+          .insert({ id: newId, phone: cleanPhone, role: targetRole, full_name: '', city: 'Талдыкорган' })
+          .select()
+          .single();
+        if (insertErr) throw insertErr;
+        profile = created;
+      } else if (intentRole) {
+        // Update role if intentRole provided
+        const targetRole = intentRole === 'seller' ? 'seller' : 'driver';
+        const { data: updated } = await supabase
+          .from('profiles')
+          .update({ role: targetRole })
+          .eq('id', profile.id)
+          .select()
+          .single();
+        if (updated) profile = updated;
       }
-    } catch (err) {
+
+      let sellerProfile = null;
+      if (profile.role === 'seller') {
+        const { data: sp } = await supabase
+          .from('seller_profiles')
+          .select('*')
+          .eq('user_id', profile.id)
+          .maybeSingle();
+        sellerProfile = sp;
+      }
+
+      const requiresOnboarding = profile.role === 'driver'
+        ? (!profile.full_name || profile.full_name.trim() === '')
+        : (!sellerProfile);
+
       setLoading(false);
-      // Direct local login fallback respecting intentRole
       onAuthSuccess({
         success: true,
-        profile: { id: 'usr-' + Date.now(), phone, role: intentRole || 'driver', full_name: '' },
+        profile,
+        sellerProfile,
+        requiresRoleSelection: !profile.role,
+        requiresOnboarding
+      });
+      onClose();
+    } catch (err) {
+      setLoading(false);
+      console.error('Auth error:', err);
+      // Offline fallback
+      onAuthSuccess({
+        success: true,
+        profile: { id: 'usr-' + Date.now(), phone: cleanPhone, role: intentRole || 'driver', full_name: '' },
         requiresRoleSelection: false,
         requiresOnboarding: true
       });

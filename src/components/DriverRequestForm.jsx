@@ -4,6 +4,8 @@ import { autoClassify } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import VoiceInput from './VoiceInput';
 import { safeParseJSON, safeWhatsAppUrl } from '../utils/security';
+import { supabase } from '../lib/supabase';
+import { autoClassify as classifyPart } from '../../server/classifier.js';
 
 const GARAGE_KEY = 'partdrive_garage';
 
@@ -59,63 +61,49 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
     setError('');
     setLoading(true);
 
-    try {
-      const res = await fetch('/api/requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          driverId: user?.id || 'usr-driver-1',
-          driverPhone: user?.phone || '+7 701 111 22 33',
-          carModel: carModel.trim(),
-          partName: partNeeded.trim(),
-          photos
-        })
-      });
-      const data = await res.json();
-      setLoading(false);
+    const classification = liveClassification || autoClassify(carModel.trim(), partNeeded.trim());
+    const requestRecord = {
+      id: 'req-' + Date.now(),
+      driver_id: user?.id || 'anonymous',
+      driver_phone: user?.phone || '',
+      car_model: carModel.trim(),
+      part_name: partNeeded.trim(),
+      photos: photos,
+      detected_country: classification?.origin?.id || 'Unknown',
+      detected_category: classification?.category?.id || 'Other',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+    };
 
-      const submittedReq = (res.ok && data.success) ? data.request : {
-        id: 'req-' + Date.now(),
-        carModel: carModel.trim(),
-        partNeeded: partNeeded.trim(),
-        part_name: partNeeded.trim(),
-        photos,
-        origin: liveClassification?.origin?.id || 'Germany',
-        category: liveClassification?.category?.id || 'Suspension',
-        originInfo: liveClassification?.origin || { name: 'Германия' },
-        categoryInfo: liveClassification?.category || { name: 'Подвеска' },
-        expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-        offers: []
-      };
+    // Save directly to Supabase — syncs across ALL devices instantly
+    const { data: saved, error: supaErr } = await supabase
+      .from('requests')
+      .insert(requestRecord)
+      .select()
+      .single();
 
-      setSuccess(true);
-      setCarModel('');
-      setPartNeeded('');
-      setPhotos([]);
-      onRequestSubmitted(submittedReq);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setLoading(false);
-      const fallbackReq = {
-        id: 'req-' + Date.now(),
-        carModel: carModel.trim(),
-        partNeeded: partNeeded.trim(),
-        part_name: partNeeded.trim(),
-        photos,
-        origin: liveClassification?.origin?.id || 'Germany',
-        category: liveClassification?.category?.id || 'Suspension',
-        originInfo: liveClassification?.origin || { name: 'Германия' },
-        categoryInfo: liveClassification?.category || { name: 'Подвеска' },
-        expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-        offers: []
-      };
-      setSuccess(true);
-      setCarModel('');
-      setPartNeeded('');
-      setPhotos([]);
-      onRequestSubmitted(fallbackReq);
-      setTimeout(() => setSuccess(false), 3000);
-    }
+    setLoading(false);
+
+    const submittedReq = {
+      ...(saved || requestRecord),
+      car_model: requestRecord.car_model,
+      carModel: requestRecord.car_model,
+      partNeeded: requestRecord.part_name,
+      part_name: requestRecord.part_name,
+      originInfo: classification?.origin || { name: 'Неизвестно' },
+      categoryInfo: classification?.category || { name: 'Другое' },
+      offers: []
+    };
+
+    if (supaErr) console.error('Supabase insert error:', supaErr.message);
+
+    setSuccess(true);
+    setCarModel('');
+    setPartNeeded('');
+    setPhotos([]);
+    onRequestSubmitted(submittedReq);
+    setTimeout(() => setSuccess(false), 3000);
   };
 
   // WhatsApp notification link for sellers (pre-formatted alert message)

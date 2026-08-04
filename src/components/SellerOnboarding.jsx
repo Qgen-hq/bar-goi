@@ -18,16 +18,16 @@ const MARKETS_LIST = [
 export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackToFeed }) {
   const t = translations[lang || 'ru'];
 
-  const [shopName, setShopName] = useState(shop?.shop_name || shop?.shopName || 'ChinaParts Taldykorgan');
-  const [phone, setPhone] = useState(shop?.whatsapp_phone || shop?.whatsapp || user?.phone || '+7 777 999 88 77');
+  const [shopName, setShopName] = useState(shop?.shop_name || shop?.shopName || '');
+  const [phone, setPhone] = useState(shop?.whatsapp_phone || shop?.whatsapp || user?.phone || '');
   const [city, setCity] = useState(shop?.city || user?.city || 'Талдыкорган');
   const [marketName, setMarketName] = useState(shop?.market_name || shop?.marketName || MARKETS_LIST[0]);
-  const [boothNumber, setBoothNumber] = useState(shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42');
+  const [boothNumber, setBoothNumber] = useState(shop?.booth_number || shop?.boothNumber || '');
   const [storefrontPhoto, setStorefrontPhoto] = useState(
-    shop?.photo_url || shop?.storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80'
+    shop?.photo_url || shop?.storefrontPhoto || ''
   );
   
-  const [countries, setCountries] = useState(shop?.countries || ['China']);
+  const [countries, setCountries] = useState(shop?.countries || ['China', 'Japan', 'Germany']);
   const [categories, setCategories] = useState(shop?.categories || ['Engine', 'Suspension', 'Brakes', 'Electrical', 'Optics']);
   const [whatsappAlertsEnabled, setWhatsappAlertsEnabled] = useState(true);
 
@@ -59,14 +59,14 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
   };
 
   const testWaAlertUrl = safeWhatsAppUrl(
-    phone,
-    `Сәлеметсіз бе! bar.go жүйесінен ${city} қаласындағы «${shopName}» автобутигіне WhatsApp-уведомления белсендірілді! 🚘`
+    phone || '77000000000',
+    `Сәлеметсіз бе! bar.go жүйесінен ${city} қаласындағы «${shopName || 'Автобутик'}» автобутигіне WhatsApp-уведомления белсендірілді! 🚘`
   );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!shopName.trim() || !phone.trim() || !boothNumber.trim() || !storefrontPhoto) {
-      setError(lang === 'kz' ? 'Барлық өрістерді толтырыңыз' : 'Заполните название магазина, номер телефона, фото фасада и номер бутика');
+    if (!shopName.trim() || !phone.trim() || !boothNumber.trim()) {
+      setError(lang === 'kz' ? 'Барлық өрістерді толтырыңыз' : 'Укажите название магазина, номер WhatsApp и номер бутика');
       return;
     }
 
@@ -87,8 +87,8 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       marketName,
       booth_number: boothNumber.trim(),
       boothNumber: boothNumber.trim(),
-      photo_url: storefrontPhoto,
-      storefrontPhoto,
+      photo_url: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
+      storefrontPhoto: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
       whatsapp_phone: phone.trim(),
       whatsapp: phone.trim(),
       countries,
@@ -110,7 +110,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
             city,
             marketName,
             boothNumber: boothNumber.trim(),
-            storefrontPhoto,
+            storefrontPhoto: fallbackShop.photo_url,
             whatsappPhone: phone.trim(),
             countries,
             categories
@@ -230,7 +230,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
               className="form-input"
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
-              placeholder="Например: ChinaParts Taldykorgan"
+              placeholder="Укажите название автобутика (например: ChinaParts)"
               required
             />
           </div>
@@ -243,7 +243,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
               style={{ fontSize: '16px', fontWeight: 700 }}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+7 7XX XXX XX XX"
+              placeholder="+7 (7XX) XXX-XX-XX"
               required
             />
           </div>
@@ -281,7 +281,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
               className="form-input"
               value={boothNumber}
               onChange={(e) => setBoothNumber(e.target.value)}
-              placeholder="Например: 2-й ряд, бутик 42"
+              placeholder="Укажите номер бутика (например: 2-й ряд, бутик 14)"
               required
             />
           </div>
@@ -302,7 +302,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
             ) : (
               <label style={{ width: '100%', height: '90px', borderRadius: '12px', border: '2px dashed #CBD5E1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#F8FAFC', color: 'var(--text-muted)' }}>
                 <Camera size={24} />
-                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 700 }}>{t.uploadPhotoBtn}</span>
+                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 700 }}>+ Загрузить фото фасада бутика</span>
                 <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
               </label>
             )}

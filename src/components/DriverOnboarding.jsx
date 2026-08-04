@@ -22,8 +22,8 @@ export const KZ_CITIES = [
 export default function DriverOnboarding({ user, lang, onSaveProfile }) {
   const t = translations[lang || 'ru'];
 
-  const [fullName, setFullName] = useState(user?.full_name || user?.fullName || 'Арман Жумабеков');
-  const [phone, setPhone] = useState(user?.phone || '+7 701 111 22 33');
+  const [fullName, setFullName] = useState(user?.full_name || user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [city, setCity] = useState(user?.city || 'Талдыкорган');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -84,7 +84,7 @@ export default function DriverOnboarding({ user, lang, onSaveProfile }) {
         </div>
 
         <h2 style={{ fontSize: '22px', fontWeight: 900, marginBottom: '6px' }}>
-          {lang === 'kz' ? 'Жүргізуші профилін тіркеу' : 'Регистрация Водителя (All-in-One)'}
+          {lang === 'kz' ? 'Жүргізуші профилін тіркеу' : 'Регистрация Водителя'}
         </h2>
 
         <p style={{ fontSize: '13px', color: '#94A3B8' }}>
@@ -107,7 +107,7 @@ export default function DriverOnboarding({ user, lang, onSaveProfile }) {
             className="form-input"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="например: Арман Жумабеков"
+            placeholder="Введите ваше имя"
             required
           />
         </div>
@@ -121,7 +121,7 @@ export default function DriverOnboarding({ user, lang, onSaveProfile }) {
             style={{ fontSize: '16px', fontWeight: 700 }}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="+7 7XX XXX XX XX"
+            placeholder="+7 (7XX) XXX-XX-XX"
             required
           />
         </div>

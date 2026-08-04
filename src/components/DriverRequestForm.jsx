@@ -5,7 +5,6 @@ import { translations } from '../i18n/translations';
 import VoiceInput from './VoiceInput';
 import { safeParseJSON, safeWhatsAppUrl } from '../utils/security';
 import { supabase } from '../lib/supabase';
-import { autoClassify as classifyPart } from '../../server/classifier.js';
 
 const GARAGE_KEY = 'partdrive_garage';
 
@@ -103,13 +102,18 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
     setPartNeeded('');
     setPhotos([]);
     onRequestSubmitted(submittedReq);
-    setTimeout(() => setSuccess(false), 3000);
-  };
 
-  // WhatsApp notification link for sellers (pre-formatted alert message)
-  const waAlertText = carModel && partNeeded
-    ? `🚘 Новый запрос на bar.go!\n${user?.city || 'Талдыкорган'}: *${carModel.trim()}* — *${partNeeded.trim()}*\n\nОтветьте водителю за 10 секунд: https://bar-go.vercel.app`
-    : '';
+    // Auto-open WhatsApp alert to sellers immediately on request creation
+    const waText = `🚘 Новый запрос в ${user?.city || 'Талдыкорган'}!\n${requestRecord.car_model} — ${requestRecord.part_name}.\n\n[ Нажать и ответить за 10 секунд: https://bar-go.vercel.app ]`;
+    const waUrl = safeWhatsAppUrl('77779998877', waText);
+    try {
+      window.open(waUrl, '_blank');
+    } catch (err) {
+      console.error('Auto WA redirect blocked by popup blocker', err);
+    }
+
+    setTimeout(() => { setSuccess(false); }, 5000);
+  };
 
   return (
     <div style={{ position: 'sticky', top: '90px' }}>
@@ -126,7 +130,7 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
 
       {success && (
         <div style={{ background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46', padding: '14px', borderRadius: '14px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
-          <CheckCircle2 size={20} /> {t.tenderCreatedSuccess}
+          <CheckCircle2 size={20} /> {lang === 'kz' ? 'Сұраныс жарияланды және WhatsApp арқылы бутикерлерге жіберілді!' : 'Запрос создан и автоматически отправлен бутиками в WhatsApp!'}
         </div>
       )}
 
@@ -264,23 +268,6 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
         <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '16px', fontSize: '16px' }}>
           <Send size={18} /> {loading ? '...' : t.publishTenderBtn}
         </button>
-
-        {/* WhatsApp Seller Notification Helper — shown after fields are filled */}
-        {carModel && partNeeded && (
-          <div style={{ marginTop: '12px', background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: '12px', padding: '12px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 800, color: '#166534', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Bell size={12} /> {lang === 'kz' ? 'Бутик иелерін WhatsApp арқылы хабарландыру:' : 'Уведомить бутики в WhatsApp об этом запросе:'}
-            </div>
-            <a
-              href={safeWhatsAppUrl('77779998877', waAlertText)}
-              target="_blank"
-              rel="noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#25D366', color: '#fff', padding: '7px 14px', borderRadius: '10px', textDecoration: 'none', fontSize: '12px', fontWeight: 800 }}
-            >
-              <MessageSquare size={13} /> {lang === 'kz' ? 'WhatsApp арқылы жіберу' : 'Отправить уведомление в WhatsApp'}
-            </a>
-          </div>
-        )}
       </form>
     </div>
   );

@@ -88,29 +88,44 @@ export default function App() {
   const fetchRequests = async () => {
     setLoadingRequests(true);
     try {
-      const isDriver = (user?.role === 'Driver' || user?.role === 'driver');
-      const now = new Date().toISOString();
-
-      // Direct Supabase query — works on ALL devices without Express server
-      let query = supabase
+      // Query active requests from Supabase across all devices
+      const { data, error } = await supabase
         .from('requests')
-        .select('*, offers(*)')
+        .select('*')
         .eq('status', 'active')
-        .gt('expires_at', now)
         .order('created_at', { ascending: false });
 
-      if (isDriver && user?.phone) {
-        query = query.eq('driver_phone', user.phone);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
 
       if (Array.isArray(data)) {
-        setRequests(data);
+        const reqIds = data.map(r => r.id);
+        let offersMap = {};
+        if (reqIds.length > 0) {
+          const { data: offersData } = await supabase
+            .from('offers')
+            .select('*')
+            .in('request_id', reqIds);
+          (offersData || []).forEach(o => {
+            if (!offersMap[o.request_id]) offersMap[o.request_id] = [];
+            offersMap[o.request_id].push(o);
+          });
+        }
+
+        const enriched = data.map(r => ({ ...r, offers: offersMap[r.id] || [] }));
+
+        setRequests(prev => {
+          const map = new Map();
+          // Keep existing items in state first
+          prev.forEach(item => map.set(item.id, item));
+          // Merge fresh items from Supabase
+          enriched.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+          const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          localStorage.setItem('partdrive_requests', JSON.stringify(merged));
+          return merged;
+        });
       }
     } catch (e) {
-      console.error('Error fetching requests from Supabase:', e);
+      console.error('Supabase fetch error, using local state/cache:', e.message);
     } finally {
       setLoadingRequests(false);
     }
@@ -122,50 +137,24 @@ export default function App() {
     }
   }, [authStep, user?.phone, user?.role]);
 
-  // Real-Time WebSocket Connection
+  // Real-Time Supabase Postgres Changes Subscription
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:3001`;
-    let ws;
+    if (authStep !== 'MAIN') return;
 
-    try {
-      ws = new WebSocket(wsUrl);
-
-      ws.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          
-          if (message.type === 'NEW_REQUEST') {
-            setRequests(prev => {
-              if (prev.some(r => r.id === message.payload.id)) return prev;
-              return [message.payload, ...prev];
-            });
-          } else if (message.type === 'NEW_OFFER') {
-            const offer = message.payload;
-            setRequests(prev => prev.map(req => {
-              if (req.id === offer.requestId || req.id === offer.request_id) {
-                const existingOffers = req.offers || [];
-                if (existingOffers.some(o => o.id === offer.id)) return req;
-                return {
-                  ...req,
-                  offers: [offer, ...existingOffers]
-                };
-              }
-              return req;
-            }));
-          }
-        } catch (err) {
-          console.error('Error handling WS msg', err);
-        }
-      };
-    } catch (err) {
-      console.error('WebSocket connection error', err);
-    }
+    const channel = supabase
+      .channel('public:realtime_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+        fetchRequests();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => {
+        fetchRequests();
+      })
+      .subscribe();
 
     return () => {
-      if (ws) ws.close();
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authStep]);
 
   const handleStartRoleFlow = (selectedRole) => {
     const newUser = { id: 'usr-' + Date.now(), role: selectedRole };
@@ -199,12 +188,18 @@ export default function App() {
     const enrichedReq = {
       ...newReq,
       city: selectedCity,
-      driverPhone: user?.phone || newReq.driverPhone || '+7 701 111 22 33',
-      driver_phone: user?.phone || newReq.driverPhone || '+7 701 111 22 33',
-      createdAgo: 'Только что'
+      driverPhone: user?.phone || newReq.driverPhone || '',
+      driver_phone: user?.phone || newReq.driver_phone || '',
+      createdAgo: 'Только что',
+      offers: newReq.offers || []
     };
 
-    setRequests(prev => [enrichedReq, ...prev]);
+    setRequests(prev => {
+      const updated = [enrichedReq, ...prev];
+      // Immediately persist to localStorage so refresh never loses it
+      localStorage.setItem('partdrive_requests', JSON.stringify(updated));
+      return updated;
+    });
     setActiveTab('my_requests');
   };
 

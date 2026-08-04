@@ -18,8 +18,15 @@ export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('partdrive_lang') || 'ru');
   const [selectedCity, setSelectedCity] = useState(() => localStorage.getItem('partdrive_city') || 'Талдыкорган');
   
-  const [user, setUser] = useState(() => safeParseJSON(localStorage.getItem('partdrive_user'), null));
-  const [profile, setProfile] = useState(() => safeParseJSON(localStorage.getItem('partdrive_profile'), null));
+  const [user, setUser] = useState(() => {
+    const u = safeParseJSON(localStorage.getItem('partdrive_user'), null);
+    return (u && typeof u === 'object' && u.id && u.role) ? u : null;
+  });
+
+  const [profile, setProfile] = useState(() => {
+    const p = safeParseJSON(localStorage.getItem('partdrive_profile'), null);
+    return (p && typeof p === 'object') ? p : null;
+  });
 
   const [authStep, setAuthStep] = useState(() => {
     const savedUser = safeParseJSON(localStorage.getItem('partdrive_user'), null);

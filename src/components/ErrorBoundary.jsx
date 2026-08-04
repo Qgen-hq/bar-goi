@@ -16,8 +16,15 @@ export default class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
-    window.location.reload();
+    try {
+      localStorage.removeItem('partdrive_user');
+      localStorage.removeItem('partdrive_profile');
+      localStorage.removeItem('partdrive_requests');
+      localStorage.removeItem('partdrive_my_sent_offers');
+    } catch (e) {
+      console.error(e);
+    }
+    window.location.href = window.location.origin;
   };
 
   render() {

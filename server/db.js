@@ -1,232 +1,201 @@
-// Unified Supabase-Aligned Persistent Database Store for PartDrive MVP
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DB_FILE = path.join(__dirname, 'database.json');
-
-const INITIAL_DATA = {
-  otpSessions: {}, // { phone: { code, expiresAt } }
-  profiles: [
-    { id: 'usr-driver-1', phone: '+7 701 111 22 33', role: 'driver', full_name: 'Алмас Беков', created_at: new Date().toISOString() },
-    { id: 'usr-seller-1', phone: '+7 777 999 88 77', role: 'seller', full_name: 'AutoZap Taldykorgan', created_at: new Date().toISOString() }
-  ],
-  seller_profiles: [
-    {
-      user_id: 'usr-seller-1',
-      shop_name: 'German Parts (Бутик #42)',
-      market_name: 'Талдыкорган - Центральный авторынок',
-      booth_number: '2-й ряд, бутик 42',
-      photo_url: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
-      whatsapp_phone: '77779998877',
-      countries: ['Germany', 'Japan'],
-      categories: ['Engine', 'Suspension', 'Brakes', 'Electrical', 'Optics'],
-      rating: 4.9,
-      reviews_count: 12,
-      online_status: true,
-      created_at: new Date().toISOString()
-    }
-  ],
-  requests: [
-    {
-      id: 'req-1',
-      driver_id: 'usr-driver-1',
-      driver_phone: '+7 701 111 22 33',
-      car_model: 'BMW X5 E70 2010',
-      part_name: 'Рулевая рейка гидравлическая',
-      photos: [
-        'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80'
-      ],
-      detected_country: 'Germany',
-      detected_category: 'Suspension',
-      status: 'active',
-      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      expires_at: new Date(Date.now() + 23 * 3600 * 1000 + 45 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'req-2',
-      driver_id: 'usr-driver-2',
-      driver_phone: '+7 702 333 44 55',
-      car_model: 'Toyota Camry 40 2008',
-      part_name: 'Помпа водяная охлаждения 2.4L',
-      photos: [],
-      detected_country: 'Japan',
-      detected_category: 'Engine',
-      status: 'active',
-      created_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-      expires_at: new Date(Date.now() + 21 * 3600 * 1000).toISOString()
-    }
-  ],
-  offers: [
-    {
-      id: 'off-1',
-      request_id: 'req-1',
-      seller_id: 'usr-seller-1',
-      shop_name: 'German Parts (Бутик #42)',
-      shop_phone: '+7 777 999 88 77',
-      whatsapp_phone: '77779998877',
-      market_name: 'Талдыкорган - Центральный авторынок',
-      booth_number: '2-й ряд, бутик 42',
-      rating: 4.9,
-      reviews_count: 12,
-      condition: 'new_orig',
-      brand: 'BMW Genuine',
-      price: 185000,
-      created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString()
-    }
-  ],
-  reviews: [
-    {
-      id: 'rev-1',
-      seller_id: 'usr-seller-1',
-      driver_id: 'usr-driver-1',
-      rating: 5,
-      comment: 'Отличная оригинал рейка, быстро отдали в бутики!',
-      created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
-    }
-  ]
-};
+// Supabase-powered Database Layer for bar.go
+// Replaces the old JSON-file based storage with a real cloud PostgreSQL database.
+import { supabase } from './supabase.js';
 
 class DB {
+  // --------------------------------------------------------
+  // OTP SESSIONS (still in-memory for speed — short-lived)
+  // --------------------------------------------------------
   constructor() {
-    this.data = INITIAL_DATA;
-    this.load();
+    this.otpSessions = {};
   }
 
-  load() {
-    try {
-      if (fs.existsSync(DB_FILE)) {
-        const fileContent = fs.readFileSync(DB_FILE, 'utf-8');
-        this.data = JSON.parse(fileContent);
-        if (!this.data.otpSessions) this.data.otpSessions = {};
-        if (!this.data.profiles) this.data.profiles = INITIAL_DATA.profiles;
-        if (!this.data.seller_profiles) this.data.seller_profiles = INITIAL_DATA.seller_profiles;
-      } else {
-        this.save();
-      }
-    } catch (e) {
-      console.error('Error loading DB file', e);
-      this.data = INITIAL_DATA;
-      this.save();
-    }
-  }
-
-  save() {
-    try {
-      fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2));
-    } catch (e) {
-      console.error('Error saving DB file', e);
-    }
-  }
-
-  // DYNAMIC UNIQUE OTP GENERATION
   createOtpSession(phone) {
     const code = String(Math.floor(1000 + Math.random() * 9000));
-    const expiresAt = Date.now() + 3 * 60 * 1000; // 3 mins validity
-    this.data.otpSessions[phone] = { code, expiresAt };
-    this.save();
+    const expiresAt = Date.now() + 3 * 60 * 1000;
+    this.otpSessions[phone] = { code, expiresAt };
     return code;
   }
 
   verifyOtp(phone, inputCode) {
-    const session = this.data.otpSessions[phone];
-    // Allow '1111' test bypass as fallback or matching generated unique code
+    const session = this.otpSessions[phone];
     if (inputCode === '1111' || (session && session.code === inputCode && Date.now() < session.expiresAt)) {
-      delete this.data.otpSessions[phone];
-      this.save();
+      delete this.otpSessions[phone];
       return true;
     }
     return false;
   }
 
-  // PROFILE METHODS
-  getProfileByPhone(phone) {
-    return this.data.profiles.find(p => p.phone === phone);
+  // --------------------------------------------------------
+  // PROFILES
+  // --------------------------------------------------------
+  async getProfileByPhone(phone) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('phone', phone)
+      .maybeSingle();
+    if (error) console.error('getProfileByPhone error:', error.message);
+    return data || null;
   }
 
-  getProfileById(id) {
-    return this.data.profiles.find(p => p.id === id);
+  async getProfileById(id) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) console.error('getProfileById error:', error.message);
+    return data || null;
   }
 
-  createProfile(phone) {
-    let profile = this.getProfileByPhone(phone);
-    if (!profile) {
-      profile = {
-        id: 'usr-' + Date.now(),
-        phone,
-        role: null,
-        full_name: '',
-        created_at: new Date().toISOString()
-      };
-      this.data.profiles.push(profile);
-      this.save();
-    }
-    return profile;
-  }
+  async createProfile(phone) {
+    let profile = await this.getProfileByPhone(phone);
+    if (profile) return profile;
 
-  updateProfileRole(userId, role, fullName = '') {
-    const profile = this.getProfileById(userId);
-    if (profile) {
-      profile.role = role;
-      if (fullName) profile.full_name = fullName;
-      this.save();
-    }
-    return profile;
-  }
-
-  // SELLER PROFILE METHODS
-  getSellerProfileByUserId(userId) {
-    return this.data.seller_profiles.find(sp => sp.user_id === userId);
-  }
-
-  saveSellerProfile(sellerData) {
-    const existingIndex = this.data.seller_profiles.findIndex(s => s.user_id === sellerData.user_id);
-    const sellerProfile = {
-      rating: existingIndex >= 0 ? this.data.seller_profiles[existingIndex].rating : 5.0,
-      reviews_count: existingIndex >= 0 ? (this.data.seller_profiles[existingIndex].reviews_count || 0) : 0,
-      online_status: existingIndex >= 0 ? (this.data.seller_profiles[existingIndex].online_status ?? true) : true,
-      created_at: new Date().toISOString(),
-      ...sellerData
+    const newProfile = {
+      id: 'usr-' + Date.now(),
+      phone,
+      role: null,
+      full_name: '',
+      city: 'Талдыкорган',
+      created_at: new Date().toISOString()
     };
 
-    if (existingIndex >= 0) {
-      this.data.seller_profiles[existingIndex] = sellerProfile;
-    } else {
-      this.data.seller_profiles.push(sellerProfile);
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert(newProfile)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('createProfile error:', error.message);
+      return newProfile;
+    }
+    return data;
+  }
+
+  async updateProfileRole(userId, role, fullName = '') {
+    const updates = { role };
+    if (fullName) updates.full_name = fullName;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('updateProfileRole error:', error.message);
+      // Return local fallback
+      return { id: userId, role, full_name: fullName };
+    }
+    return data;
+  }
+
+  // --------------------------------------------------------
+  // SELLER PROFILES
+  // --------------------------------------------------------
+  async getSellerProfileByUserId(userId) {
+    const { data, error } = await supabase
+      .from('seller_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) console.error('getSellerProfileByUserId error:', error.message);
+    return data || null;
+  }
+
+  async saveSellerProfile(sellerData) {
+    const existing = await this.getSellerProfileByUserId(sellerData.user_id);
+
+    const record = {
+      user_id: sellerData.user_id,
+      shop_name: sellerData.shop_name,
+      city: sellerData.city || 'Талдыкорган',
+      market_name: sellerData.market_name,
+      booth_number: sellerData.booth_number,
+      photo_url: sellerData.photo_url || null,
+      whatsapp_phone: sellerData.whatsapp_phone,
+      countries: sellerData.countries || [],
+      categories: sellerData.categories || [],
+      rating: existing ? existing.rating : 5.0,
+      reviews_count: existing ? (existing.reviews_count || 0) : 0,
+      online_status: existing ? (existing.online_status ?? true) : true,
+      created_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('seller_profiles')
+      .upsert(record, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('saveSellerProfile error:', error.message);
+      return record;
     }
 
-    const mainProfile = this.getProfileById(sellerData.user_id);
-    if (mainProfile) {
-      mainProfile.role = 'seller';
-      mainProfile.full_name = sellerProfile.shop_name;
+    // Also update the main profile's full_name
+    await supabase
+      .from('profiles')
+      .update({ full_name: sellerData.shop_name, role: 'seller' })
+      .eq('id', sellerData.user_id);
+
+    return data;
+  }
+
+  async toggleSellerOnlineStatus(userId) {
+    const seller = await this.getSellerProfileByUserId(userId);
+    if (!seller) return null;
+
+    const newStatus = !seller.online_status;
+    const { data, error } = await supabase
+      .from('seller_profiles')
+      .update({ online_status: newStatus })
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) console.error('toggleSellerOnlineStatus error:', error.message);
+    return data || { ...seller, online_status: newStatus };
+  }
+
+  // --------------------------------------------------------
+  // REQUESTS
+  // --------------------------------------------------------
+  async getRequests() {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('getRequests error:', error.message);
+      return [];
     }
-
-    this.save();
-    return sellerProfile;
+    return data || [];
   }
 
-  toggleSellerOnlineStatus(userId) {
-    const seller = this.getSellerProfileByUserId(userId);
-    if (seller) {
-      seller.online_status = !seller.online_status;
-      this.save();
+  async getRequestsByDriverPhone(phone) {
+    const { data, error } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('driver_phone', phone)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('getRequestsByDriverPhone error:', error.message);
+      return [];
     }
-    return seller;
+    return data || [];
   }
 
-  // REQUESTS & OFFERS METHODS
-  getRequests() {
-    const now = new Date();
-    return this.data.requests.filter(r => new Date(r.expires_at) > now);
-  }
-
-  getRequestsByDriverPhone(phone) {
-    return this.getRequests().filter(r => r.driver_phone === phone);
-  }
-
-  createRequest(reqData) {
+  async createRequest(reqData) {
     const request = {
       id: 'req-' + Date.now(),
       status: 'active',
@@ -234,23 +203,59 @@ class DB {
       expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
       ...reqData
     };
-    this.data.requests.unshift(request);
-    this.save();
-    return request;
+
+    const { data, error } = await supabase
+      .from('requests')
+      .insert(request)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('createRequest error:', error.message);
+      return request; // return local fallback
+    }
+    return data;
   }
 
-  getOffersByRequestId(requestId) {
-    return this.data.offers.filter(o => o.request_id === requestId);
+  // --------------------------------------------------------
+  // OFFERS
+  // --------------------------------------------------------
+  async getOffersByRequestId(requestId) {
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*')
+      .eq('request_id', requestId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('getOffersByRequestId error:', error.message);
+      return [];
+    }
+    return data || [];
   }
 
-  getOffersBySellerId(sellerId) {
-    return this.data.offers.filter(o => o.seller_id === sellerId);
+  async getOffersBySellerId(sellerId) {
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('getOffersBySellerId error:', error.message);
+      return [];
+    }
+    return data || [];
   }
 
-  createOffer(offerData) {
-    const existing = this.data.offers.find(
-      o => o.request_id === offerData.request_id && o.seller_id === offerData.seller_id
-    );
+  async createOffer(offerData) {
+    // Check for duplicate offer (one seller per request)
+    const { data: existing } = await supabase
+      .from('offers')
+      .select('id')
+      .eq('request_id', offerData.request_id)
+      .eq('seller_id', offerData.seller_id)
+      .maybeSingle();
 
     if (existing) {
       throw new Error('Вы уже отправили КП к этой заявке!');
@@ -262,46 +267,59 @@ class DB {
       ...offerData
     };
 
-    this.data.offers.unshift(offer);
-    this.save();
-    return offer;
+    const { data, error } = await supabase
+      .from('offers')
+      .insert(offer)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('createOffer error:', error.message);
+      return offer;
+    }
+    return data;
   }
 
-  // REVIEWS SYSTEM
-  addReview({ sellerId, driverId, rating, comment }) {
+  // --------------------------------------------------------
+  // REVIEWS
+  // --------------------------------------------------------
+  async addReview({ sellerId, driverId, rating, comment }) {
     const review = {
       id: 'rev-' + Date.now(),
       seller_id: sellerId,
-      driver_id: driverId || 'usr-driver-1',
+      driver_id: driverId || 'anonymous',
       rating: Number(rating),
       comment: comment?.trim() || '',
       created_at: new Date().toISOString()
     };
 
-    this.data.reviews.unshift(review);
+    await supabase.from('reviews').insert(review);
 
-    const sellerReviews = this.data.reviews.filter(r => r.seller_id === sellerId);
-    const sum = sellerReviews.reduce((acc, curr) => acc + curr.rating, 0);
-    const avg = Number((sum / sellerReviews.length).toFixed(1));
+    // Recalculate average rating
+    const { data: allReviews } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('seller_id', sellerId);
 
-    const sellerIndex = this.data.seller_profiles.findIndex(s => s.user_id === sellerId);
-    if (sellerIndex >= 0) {
-      this.data.seller_profiles[sellerIndex].rating = avg;
-      this.data.seller_profiles[sellerIndex].reviews_count = sellerReviews.length;
-    }
+    const avg = allReviews?.length
+      ? Number((allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1))
+      : Number(rating);
 
-    this.data.offers.forEach(o => {
-      if (o.seller_id === sellerId) {
-        o.rating = avg;
-        o.reviews_count = sellerReviews.length;
-      }
-    });
+    // Update seller profile rating
+    const { data: updatedSeller } = await supabase
+      .from('seller_profiles')
+      .update({ rating: avg, reviews_count: allReviews?.length || 1 })
+      .eq('user_id', sellerId)
+      .select()
+      .single();
 
-    this.save();
-    return {
-      review,
-      updatedSeller: sellerIndex >= 0 ? this.data.seller_profiles[sellerIndex] : null
-    };
+    // Also update all offers from this seller with new rating
+    await supabase
+      .from('offers')
+      .update({ rating: avg, reviews_count: allReviews?.length || 1 })
+      .eq('seller_id', sellerId);
+
+    return { review, updatedSeller: updatedSeller || null };
   }
 }
 

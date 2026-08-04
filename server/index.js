@@ -45,7 +45,7 @@ app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+    "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://yyzsxsnnnrcwinajidjs.supabase.co wss:;"
   );
   next();
 });
@@ -85,7 +85,7 @@ function broadcast(type, payload) {
 // AUTHENTICATION API (INTENT-BASED ROLE ROUTING)
 // ----------------------------------------------------
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { phone, intentRole } = req.body;
 
   if (!phone || typeof phone !== 'string' || phone.trim().length < 10) {
@@ -93,26 +93,26 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const cleanPhone = sanitizeText(phone.trim());
-  let profile = db.getProfileByPhone(cleanPhone);
+  let profile = await db.getProfileByPhone(cleanPhone);
 
   const targetRole = intentRole ? (intentRole.toLowerCase() === 'seller' ? 'seller' : 'driver') : null;
 
   if (!profile) {
-    profile = db.createProfile(cleanPhone);
+    profile = await db.createProfile(cleanPhone);
     if (targetRole) {
       profile.role = targetRole;
-      db.updateProfileRole(profile.id, targetRole, '');
+      await db.updateProfileRole(profile.id, targetRole, '');
     }
   } else if (targetRole) {
     profile.role = targetRole;
-    db.updateProfileRole(profile.id, targetRole, profile.full_name || '');
+    await db.updateProfileRole(profile.id, targetRole, profile.full_name || '');
   }
 
   const activeRole = profile.role || targetRole;
   let sellerProfile = null;
   
   if (activeRole === 'seller') {
-    sellerProfile = db.getSellerProfileByUserId(profile.id);
+    sellerProfile = await db.getSellerProfileByUserId(profile.id);
   }
 
   const requiresOnboarding = activeRole === 'driver'
@@ -128,17 +128,17 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-app.post('/api/auth/complete-onboarding', (req, res) => {
+app.post('/api/auth/complete-onboarding', async (req, res) => {
   const { userId, role, driverData, sellerData } = req.body;
 
-  let profile = db.getProfileById(userId);
+  let profile = await db.getProfileById(userId);
   if (!profile) return res.status(404).json({ error: 'Профиль не найден' });
 
   const targetRole = (role || '').toLowerCase() === 'seller' ? 'seller' : 'driver';
 
   if (targetRole === 'driver') {
     const fullName = sanitizeText(driverData?.fullName || 'Водитель');
-    profile = db.updateProfileRole(userId, 'driver', fullName);
+    profile = await db.updateProfileRole(userId, 'driver', fullName);
     res.json({ success: true, profile: { ...profile, role: 'driver' }, sellerProfile: null });
   } else if (targetRole === 'seller') {
     const { shopName, city, marketName, boothNumber, storefrontPhoto, whatsappPhone, countries, categories } = sellerData || {};
@@ -155,14 +155,14 @@ app.post('/api/auth/complete-onboarding', (req, res) => {
     const safeMarketName = sanitizeText(marketName);
     const safeBoothNumber = sanitizeText(boothNumber);
 
-    profile = db.updateProfileRole(userId, 'seller', safeShopName);
-    const sellerProfile = db.saveSellerProfile({
+    profile = await db.updateProfileRole(userId, 'seller', safeShopName);
+    const sellerProfile = await db.saveSellerProfile({
       user_id: userId,
       shop_name: safeShopName,
       city: city || 'Талдыкорган',
       market_name: safeMarketName,
       booth_number: safeBoothNumber,
-      photo_url: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
+      photo_url: storefrontPhoto || null,
       whatsapp_phone: cleanWa,
       countries,
       categories
@@ -177,11 +177,11 @@ app.post('/api/auth/complete-onboarding', (req, res) => {
 // ----------------------------------------------------
 // DRIVER ENDPOINTS
 // ----------------------------------------------------
-app.get('/api/driver/my-requests/:phone', (req, res) => {
+app.get('/api/driver/my-requests/:phone', async (req, res) => {
   const safePhone = sanitizeText(req.params.phone);
-  const requests = db.getRequestsByDriverPhone(safePhone);
-  const enriched = requests.map(r => {
-    const offers = db.getOffersByRequestId(r.id);
+  const requests = await db.getRequestsByDriverPhone(safePhone);
+  const enriched = await Promise.all(requests.map(async r => {
+    const offers = await db.getOffersByRequestId(r.id);
     return {
       ...r,
       originInfo: CAR_ORIGINS[r.detected_country] || { id: r.detected_country, name: r.detected_country },
@@ -189,12 +189,12 @@ app.get('/api/driver/my-requests/:phone', (req, res) => {
       offersCount: offers.length,
       offers
     };
-  });
+  }));
 
   res.json(enriched);
 });
 
-app.post('/api/requests', rateLimiter(60 * 1000, 5, 'Слишком частая отправка запросов'), (req, res) => {
+app.post('/api/requests', rateLimiter(60 * 1000, 5, 'Слишком частая отправка запросов'), async (req, res) => {
   const { driverId, driverPhone, carModel, partName, photos } = req.body;
 
   if (!carModel?.trim() || !partName?.trim()) {
@@ -203,12 +203,12 @@ app.post('/api/requests', rateLimiter(60 * 1000, 5, 'Слишком частая
 
   const safeCarModel = sanitizeText(carModel);
   const safePartName = sanitizeText(partName);
-  const safePhone = sanitizeText(driverPhone || '+7 701 111 22 33');
+  const safePhone = sanitizeText(driverPhone || '');
 
   const classification = autoClassify(safeCarModel, safePartName);
 
-  const newRequest = db.createRequest({
-    driver_id: driverId || 'usr-driver-1',
+  const newRequest = await db.createRequest({
+    driver_id: driverId || 'anonymous',
     driver_phone: safePhone,
     car_model: safeCarModel,
     part_name: safePartName,
@@ -232,10 +232,10 @@ app.post('/api/requests', rateLimiter(60 * 1000, 5, 'Слишком частая
 // ----------------------------------------------------
 // SELLER ENDPOINTS
 // ----------------------------------------------------
-app.get('/api/requests', (req, res) => {
-  const requests = db.getRequests();
-  const enriched = requests.map(r => {
-    const offers = db.getOffersByRequestId(r.id);
+app.get('/api/requests', async (req, res) => {
+  const requests = await db.getRequests();
+  const enriched = await Promise.all(requests.map(async r => {
+    const offers = await db.getOffersByRequestId(r.id);
     return {
       ...r,
       originInfo: CAR_ORIGINS[r.detected_country] || { id: r.detected_country, name: r.detected_country },
@@ -243,47 +243,47 @@ app.get('/api/requests', (req, res) => {
       offersCount: offers.length,
       offers
     };
-  });
+  }));
 
   res.json(enriched);
 });
 
-app.get('/api/seller/my-offers/:sellerId', (req, res) => {
-  const offers = db.getOffersBySellerId(req.params.sellerId);
+app.get('/api/seller/my-offers/:sellerId', async (req, res) => {
+  const offers = await db.getOffersBySellerId(req.params.sellerId);
   res.json(offers);
 });
 
-app.post('/api/seller/toggle-status', (req, res) => {
+app.post('/api/seller/toggle-status', async (req, res) => {
   const { userId } = req.body;
-  const seller = db.toggleSellerOnlineStatus(userId);
+  const seller = await db.toggleSellerOnlineStatus(userId);
   res.json({ success: true, seller });
 });
 
-app.post('/api/offers', rateLimiter(60 * 1000, 10, 'Слишком частая отправка предложений'), (req, res) => {
+app.post('/api/offers', rateLimiter(60 * 1000, 10, 'Слишком частая отправка предложений'), async (req, res) => {
   const { requestId, sellerId, condition, brand, price, variants } = req.body;
 
   if (!requestId || !sellerId) {
     return res.status(400).json({ error: 'Укажите все параметры предложения!' });
   }
 
-  const seller = db.getSellerProfileByUserId(sellerId);
+  const seller = await db.getSellerProfileByUserId(sellerId);
   if (!seller) return res.status(404).json({ error: 'Продавец не найден' });
 
   const safeBrand = sanitizeText(brand || 'Оригинал');
   const safePrice = Math.max(0, Number(price || 0));
 
   try {
-    const offer = db.createOffer({
+    const offer = await db.createOffer({
       request_id: requestId,
       seller_id: sellerId,
       shop_name: seller.shop_name,
-      shop_phone: seller.phone,
+      shop_phone: seller.phone || '',
       whatsapp_phone: seller.whatsapp_phone,
       market_name: seller.market_name,
       booth_number: seller.booth_number,
       rating: seller.rating || 5.0,
       reviews_count: seller.reviews_count || 0,
-      condition: condition || 'New Original',
+      condition: condition || 'new_orig',
       brand: safeBrand,
       price: safePrice,
       variants: (variants || []).map(v => ({
@@ -301,7 +301,7 @@ app.post('/api/offers', rateLimiter(60 * 1000, 10, 'Слишком частая 
 });
 
 // REVIEWS API
-app.post('/api/reviews', (req, res) => {
+app.post('/api/reviews', async (req, res) => {
   const { sellerId, driverId, rating, comment } = req.body;
 
   if (!sellerId || !rating || rating < 1 || rating > 5) {
@@ -309,7 +309,7 @@ app.post('/api/reviews', (req, res) => {
   }
 
   const safeComment = sanitizeText(comment || '');
-  const result = db.addReview({ sellerId, driverId, rating: Number(rating), comment: safeComment });
+  const result = await db.addReview({ sellerId, driverId, rating: Number(rating), comment: safeComment });
 
   broadcast('SHOP_RATING_UPDATED', {
     sellerId,
@@ -327,10 +327,10 @@ app.post('/api/reviews', (req, res) => {
 
 // WEBSOCKET HANDLER
 wss.on('connection', (ws) => {
-  ws.send(JSON.stringify({ type: 'CONNECTED', message: 'BarGoi Realtime API connected' }));
+  ws.send(JSON.stringify({ type: 'CONNECTED', message: 'bar.go Realtime API connected' }));
 });
 
 const PORT = 3001;
 server.listen(PORT, () => {
-  console.log(`BarGoi Server running on http://localhost:${PORT}`);
+  console.log(`bar.go Server running on http://localhost:${PORT}`);
 });

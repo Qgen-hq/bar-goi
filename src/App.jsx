@@ -35,10 +35,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('my_requests');
   
   // LocalStorage Request & Offer Persistence Cache (Survives Refresh F5!)
-  const [requests, setRequests] = useState(() => safeParseJSON(localStorage.getItem('partdrive_requests'), []));
+  const [requests, setRequests] = useState(() => {
+    const parsed = safeParseJSON(localStorage.getItem('partdrive_requests'), []);
+    return Array.isArray(parsed) ? parsed.filter(item => item && typeof item === 'object' && item.id) : [];
+  });
 
   // LocalStorage Sent Seller Offers Cache (For 'Мои ответы и клиенты')
-  const [mySentOffers, setMySentOffers] = useState(() => safeParseJSON(localStorage.getItem('partdrive_my_sent_offers'), []));
+  const [mySentOffers, setMySentOffers] = useState(() => {
+    const parsed = safeParseJSON(localStorage.getItem('partdrive_my_sent_offers'), []);
+    return Array.isArray(parsed) ? parsed.filter(item => item && typeof item === 'object' && item.id) : [];
+  });
 
   const [loadingRequests, setLoadingRequests] = useState(false);
 
@@ -81,9 +87,10 @@ export default function App() {
   }, [mySentOffers]);
 
   useEffect(() => {
-    if (user?.role === 'Driver' || user?.role === 'driver') {
+    const roleLower = String(user?.role || '').toLowerCase();
+    if (roleLower === 'driver') {
       setActiveTab('my_requests');
-    } else if (user?.role === 'Seller' || user?.role === 'seller') {
+    } else if (roleLower === 'seller') {
       setActiveTab('tenders_feed');
     }
   }, [user?.role]);
@@ -101,7 +108,7 @@ export default function App() {
       if (error) throw error;
 
       if (Array.isArray(data)) {
-        const reqIds = data.map(r => r.id);
+        const reqIds = data.map(r => r.id).filter(Boolean);
         let offersMap = {};
         if (reqIds.length > 0) {
           const { data: offersData } = await supabase
@@ -109,26 +116,35 @@ export default function App() {
             .select('*')
             .in('request_id', reqIds);
           (offersData || []).forEach(o => {
-            if (!offersMap[o.request_id]) offersMap[o.request_id] = [];
-            offersMap[o.request_id].push(o);
+            if (o && o.request_id) {
+              if (!offersMap[o.request_id]) offersMap[o.request_id] = [];
+              offersMap[o.request_id].push(o);
+            }
           });
         }
 
-        const enriched = data.map(r => ({ ...r, offers: offersMap[r.id] || [] }));
+        const enriched = data.filter(r => r && r.id).map(r => ({ ...r, offers: offersMap[r.id] || [] }));
 
         setRequests(prev => {
           const map = new Map();
-          // Keep existing items in state first
-          prev.forEach(item => map.set(item.id, item));
+          // Keep valid existing items
+          (Array.isArray(prev) ? prev : []).forEach(item => {
+            if (item && item.id) map.set(String(item.id), item);
+          });
           // Merge fresh items from Supabase
-          enriched.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
-          const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          enriched.forEach(item => {
+            if (item && item.id) {
+              const existing = map.get(String(item.id)) || {};
+              map.set(String(item.id), { ...existing, ...item });
+            }
+          });
+          const merged = Array.from(map.values()).sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
           localStorage.setItem('partdrive_requests', JSON.stringify(merged));
           return merged;
         });
       }
     } catch (e) {
-      console.error('Supabase fetch error, using local state/cache:', e.message);
+      console.error('Supabase fetch error, using local state/cache:', e?.message || e);
     } finally {
       setLoadingRequests(false);
     }

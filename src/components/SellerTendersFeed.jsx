@@ -4,6 +4,7 @@ import ConditionBadge from './ConditionBadge';
 import BottomSheet from './BottomSheet';
 import SellerMyOffers from './SellerMyOffers';
 import { translations } from '../i18n/translations';
+import { supabase } from '../lib/supabase';
 import VoiceInput from './VoiceInput';
 
 export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
@@ -120,31 +121,38 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
     };
 
     try {
-      const res = await fetch('/api/offers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(offerPayload)
-      });
-      const data = await res.json();
-      setSubmitting(false);
+      const { data: savedOffer, error: supaErr } = await supabase
+        .from('offers')
+        .insert({
+          id: offerPayload.id,
+          request_id: offerPayload.request_id,
+          seller_id: offerPayload.seller_id,
+          shop_name: offerPayload.shop_name,
+          shop_phone: shop?.phone || '',
+          whatsapp_phone: offerPayload.whatsapp_phone,
+          market_name: offerPayload.market_name,
+          booth_number: offerPayload.booth_number,
+          rating: offerPayload.rating,
+          reviews_count: offerPayload.reviews_count,
+          condition: offerPayload.condition,
+          brand: offerPayload.brand,
+          price: offerPayload.price,
+          variants: offerPayload.variants,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-      if (res.ok && data.success) {
-        setSuccess(true);
-        onSubmitOffer(activeTenderForOffer.id, data.offer || offerPayload, activeTenderForOffer);
-        setTimeout(() => {
-          setSuccess(false);
-          setActiveTenderForOffer(null);
-          setSellerSubTab('offers_history');
-        }, 1200);
-      } else {
-        setSuccess(true);
-        onSubmitOffer(activeTenderForOffer.id, offerPayload, activeTenderForOffer);
-        setTimeout(() => {
-          setSuccess(false);
-          setActiveTenderForOffer(null);
-          setSellerSubTab('offers_history');
-        }, 1200);
-      }
+      if (supaErr) console.error('Supabase offer insert error:', supaErr.message);
+
+      setSubmitting(false);
+      setSuccess(true);
+      onSubmitOffer(activeTenderForOffer.id, savedOffer || offerPayload, activeTenderForOffer);
+      setTimeout(() => {
+        setSuccess(false);
+        setActiveTenderForOffer(null);
+        setSellerSubTab('offers_history');
+      }, 1200);
     } catch (err) {
       setSubmitting(false);
       setSuccess(true);

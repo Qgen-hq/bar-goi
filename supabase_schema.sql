@@ -1,19 +1,19 @@
 -- ============================================================
--- bar.go — Supabase Database Schema
--- Запусти этот SQL в: Supabase Dashboard → SQL Editor → Run
+-- bar.go — Supabase Database Schema & Public RLS Policies
+-- ВАЖНО: Запусти весь этот код в Supabase Dashboard → SQL Editor → Run
 -- ============================================================
 
--- 1. PROFILES (все пользователи: водители и продавцы)
+-- 1. PROFILES (все пользователи)
 create table if not exists profiles (
   id          text primary key,
   phone       text unique not null,
-  role        text,                    -- 'driver' | 'seller' | null
+  role        text,
   full_name   text default '',
   city        text default 'Талдыкорган',
   created_at  timestamptz default now()
 );
 
--- 2. SELLER PROFILES (профили автобутиков)
+-- 2. SELLER PROFILES (профили автомагазинов/бутиков)
 create table if not exists seller_profiles (
   user_id        text primary key references profiles(id) on delete cascade,
   shop_name      text not null,
@@ -45,7 +45,7 @@ create table if not exists requests (
   expires_at        timestamptz default (now() + interval '24 hours')
 );
 
--- 4. OFFERS (предложения продавцов)
+-- 4. OFFERS (предложения бутиков)
 create table if not exists offers (
   id             text primary key,
   request_id     text references requests(id) on delete cascade,
@@ -64,7 +64,7 @@ create table if not exists offers (
   created_at     timestamptz default now()
 );
 
--- 5. REVIEWS (отзывы водителей о продавцах)
+-- 5. REVIEWS (отзывы водителей)
 create table if not exists reviews (
   id          text primary key,
   seller_id   text,
@@ -75,7 +75,7 @@ create table if not exists reviews (
 );
 
 -- ============================================================
--- ОТКЛЮЧИТЬ RLS для MVP (включить позже в production)
+-- ВАЖНО: Разрешаем свободную запись и чтение для всех пользователей (Anon Public Policies)
 -- ============================================================
 alter table profiles       disable row level security;
 alter table seller_profiles disable row level security;
@@ -83,15 +83,21 @@ alter table requests       disable row level security;
 alter table offers         disable row level security;
 alter table reviews        disable row level security;
 
--- ============================================================
--- Индексы для быстрых запросов
--- ============================================================
+drop policy if exists "Allow public profiles" on profiles;
+drop policy if exists "Allow public seller_profiles" on seller_profiles;
+drop policy if exists "Allow public requests" on requests;
+drop policy if exists "Allow public offers" on offers;
+drop policy if exists "Allow public reviews" on reviews;
+
+create policy "Allow public profiles" on profiles for all using (true) with check (true);
+create policy "Allow public seller_profiles" on seller_profiles for all using (true) with check (true);
+create policy "Allow public requests" on requests for all using (true) with check (true);
+create policy "Allow public offers" on offers for all using (true) with check (true);
+create policy "Allow public reviews" on reviews for all using (true) with check (true);
+
+-- Индексы для быстрой работы
 create index if not exists idx_requests_status_expires on requests(status, expires_at);
 create index if not exists idx_requests_driver_phone   on requests(driver_phone);
 create index if not exists idx_offers_request_id       on offers(request_id);
 create index if not exists idx_offers_seller_id        on offers(seller_id);
 create index if not exists idx_reviews_seller_id       on reviews(seller_id);
-
--- ============================================================
--- Готово! База данных создана.
--- ============================================================

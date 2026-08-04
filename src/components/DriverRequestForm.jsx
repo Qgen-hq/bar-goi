@@ -102,17 +102,7 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
     setPartNeeded('');
     setPhotos([]);
     onRequestSubmitted(submittedReq);
-
-    // Auto-open WhatsApp alert to sellers immediately on request creation
-    const waText = `🚘 Новый запрос в ${user?.city || 'Талдыкорган'}!\n${requestRecord.car_model} — ${requestRecord.part_name}.\n\n[ Нажать и ответить за 10 секунд: https://bar-go.vercel.app ]`;
-    const waUrl = safeWhatsAppUrl('77779998877', waText);
-    try {
-      window.open(waUrl, '_blank');
-    } catch (err) {
-      console.error('Auto WA redirect blocked by popup blocker', err);
-    }
-
-    setTimeout(() => { setSuccess(false); }, 5000);
+    setTimeout(() => { setSuccess(false); }, 4000);
   };
 
   return (
@@ -130,7 +120,7 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
 
       {success && (
         <div style={{ background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46', padding: '14px', borderRadius: '14px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
-          <CheckCircle2 size={20} /> {lang === 'kz' ? 'Сұраныс жарияланды және WhatsApp арқылы бутикерлерге жіберілді!' : 'Запрос создан и автоматически отправлен бутиками в WhatsApp!'}
+          <CheckCircle2 size={20} /> {lang === 'kz' ? 'Сұраныс жарияланды! Бутиктердің лентасында пайда болды.' : 'Запрос успешно создан и опубликован в ленте бутиков!'}
         </div>
       )}
 

@@ -54,7 +54,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, intentRole, 
       }
 
       let sellerProfile = null;
-      if (profile.role === 'seller') {
+      if (profile?.role === 'seller') {
         const { data: sp } = await supabase
           .from('seller_profiles')
           .select('*')
@@ -63,8 +63,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, intentRole, 
         sellerProfile = sp;
       }
 
-      const requiresOnboarding = profile.role === 'driver'
-        ? (!profile.full_name || profile.full_name.trim() === '')
+      const requiresOnboarding = profile?.role === 'driver'
+        ? (!profile?.full_name || profile.full_name.trim() === '')
         : (!sellerProfile);
 
       setLoading(false);
@@ -72,7 +72,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, intentRole, 
         success: true,
         profile,
         sellerProfile,
-        requiresRoleSelection: !profile.role,
+        requiresRoleSelection: !profile?.role,
         requiresOnboarding
       });
       onClose();

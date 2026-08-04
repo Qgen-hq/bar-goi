@@ -23,9 +23,11 @@ export default function App() {
 
   const [authStep, setAuthStep] = useState(() => {
     const savedUser = safeParseJSON(localStorage.getItem('partdrive_user'), null);
-    if (savedUser) {
-      if (!savedUser.role) return 'ROLE_SELECT';
+    if (savedUser && savedUser.id && savedUser.role) {
       return 'MAIN';
+    }
+    if (savedUser && savedUser.id) {
+      return 'ROLE_SELECT';
     }
     return 'WELCOME';
   });

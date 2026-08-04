@@ -57,10 +57,10 @@ export default function ReviewModal({ isOpen, onClose, shop, driverPhone, lang, 
     <BottomSheet isOpen={isOpen} onClose={onClose} title={t.reviewModalTitle}>
       <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '12px', marginBottom: '16px' }}>
         <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--dark-slate)' }}>
-          🏪 {shop.shopName}
+          🏪 {shop?.shopName || shop?.shop_name || 'Автобутик'}
         </div>
         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-          📍 {shop.marketName} ({shop.boothNumber})
+          📍 {shop?.marketName || shop?.market_name || 'Авторынок'} ({shop?.boothNumber || shop?.booth_number || 'Бутик'})
         </div>
       </div>
 

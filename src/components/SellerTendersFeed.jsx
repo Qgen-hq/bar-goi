@@ -23,9 +23,10 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
   const [success, setSuccess] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
-  // Clean Requests Feed: Only real user-created requests
-  const rawRequests = requests || [];
-  const shopCountries = shop?.countries || ['China', 'Germany', 'Japan'];
+  const rawRequests = Array.isArray(requests) ? requests : [];
+  const shopCountries = Array.isArray(shop?.countries) && shop.countries.length > 0
+    ? shop.countries
+    : ['China', 'Germany', 'Japan'];
 
   const filteredRequests = rawRequests.filter(req => {
     if (filterMode === 'all') return true;

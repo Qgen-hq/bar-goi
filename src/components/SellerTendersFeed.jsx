@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter, LogOut } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter, LogOut, Zap } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import BottomSheet from './BottomSheet';
 import SellerMyOffers from './SellerMyOffers';
@@ -64,6 +64,13 @@ const SAMPLE_SELLER_FEED = [
     driverPhone: '+7 747 123 45 67',
     createdAgo: '45 мин назад'
   }
+];
+
+const SELLER_QUICK_PRESETS = [
+  '🟢 В наличии (Оригинал)',
+  '📦 Под заказ (1-2 дня)',
+  '🚚 Доставка по городу бесплатно',
+  '🚗 С авторазбора (Б/У Оригинал)'
 ];
 
 export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
@@ -165,7 +172,7 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
       booth_number: shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42',
       whatsapp: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
       whatsapp_phone: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
-      rating: 5.0, // STRICT 5.0 STAR DEFAULT FOR ALL BOUTIQUES!
+      rating: 5.0,
       reviewsCount: shop?.reviews_count || 1,
       reviews_count: shop?.reviews_count || 1,
       condition: firstVariant.condition,
@@ -485,6 +492,33 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
                       <Trash2 size={14} /> {lang === 'kz' ? 'Жою' : 'Удалить'}
                     </button>
                   )}
+                </div>
+
+                {/* 1-TAP SELLER QUICK RESPONSE PRESET PILLS */}
+                <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', marginBottom: '10px', paddingBottom: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, alignSelf: 'center', whiteSpace: 'nowrap' }}>
+                    ⚡ {lang === 'kz' ? 'Шаблон:' : 'Шаблон:'}
+                  </span>
+                  {SELLER_QUICK_PRESETS.map(preset => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => updateVariant(index, 'brand', preset)}
+                      style={{
+                        background: v.brand === preset ? 'var(--primary-emerald-light)' : '#F1F5F9',
+                        border: v.brand === preset ? '1px solid var(--primary-emerald)' : '1px solid var(--border-color)',
+                        color: v.brand === preset ? 'var(--primary-emerald)' : '#475569',
+                        padding: '3px 8px',
+                        borderRadius: '10px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {preset}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="form-group">

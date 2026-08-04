@@ -4,12 +4,12 @@ import ConditionBadge from './ConditionBadge';
 import ReviewModal from './ReviewModal';
 import { translations } from '../i18n/translations';
 import BrandedLoader from './BrandedLoader';
+import { safeWhatsAppUrl } from '../utils/security';
 
 export default function DriverRequestsList({ requests, loadingRequests, lang, userPhone, onRefresh, onReviewSubmitted }) {
   const t = translations[lang || 'ru'];
   const [activeReviewSeller, setActiveReviewSeller] = useState(null);
 
-  // Filter requests strictly for this driver (or show all user created requests if no phone match)
   const displayRequests = requests || [];
 
   return (
@@ -101,15 +101,13 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {offers.map((off, oIdx) => {
-                        const cleanPhone = (off.whatsapp || off.whatsapp_phone || '77779998877').replace(/\D/g, '');
+                        const rawPhone = off.whatsapp || off.whatsapp_phone || '77779998877';
                         const variants = off.variants || [
                           { brand: off.brand || 'Оригинал', price: off.price || 0, condition: off.condition || 'New Original' }
                         ];
 
-                        const waMessage = encodeURIComponent(
-                          `Сәлеметсіз бе! bar.go арқылы ${carTitle} — ${partTitle} бөлшегі бойынша ұсынысыңызды көрдім.`
-                        );
-                        const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
+                        const waMsgText = `Сәлеметсіз бе! bar.go арқылы ${carTitle} — ${partTitle} бөлшегі бойынша ұсынысыңызды көрдім.`;
+                        const waUrl = safeWhatsAppUrl(rawPhone, waMsgText);
 
                         return (
                           <div key={off.id || oIdx} style={{ background: '#FFFFFF', border: '1.5px solid var(--border-color)', borderRadius: '14px', padding: '14px', boxShadow: 'var(--shadow-sm)' }}>

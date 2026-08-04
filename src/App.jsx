@@ -10,62 +10,31 @@ import DriverProfile from './components/DriverProfile';
 import SellerTendersFeed from './components/SellerTendersFeed';
 import SellerMyOffers from './components/SellerMyOffers';
 import AuthModal from './components/AuthModal';
+import { safeParseJSON } from './utils/security';
 
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('partdrive_lang') || 'ru');
   const [selectedCity, setSelectedCity] = useState(() => localStorage.getItem('partdrive_city') || 'Талдыкорган');
   
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('partdrive_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  const [profile, setProfile] = useState(() => {
-    try {
-      const saved = localStorage.getItem('partdrive_profile');
-      return saved ? JSON.parse(saved) : null;
-    } catch (e) {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(() => safeParseJSON(localStorage.getItem('partdrive_user'), null));
+  const [profile, setProfile] = useState(() => safeParseJSON(localStorage.getItem('partdrive_profile'), null));
 
   const [authStep, setAuthStep] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('partdrive_user');
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (!parsed.role) return 'ROLE_SELECT';
-        return 'MAIN';
-      }
-    } catch (e) {}
+    const savedUser = safeParseJSON(localStorage.getItem('partdrive_user'), null);
+    if (savedUser) {
+      if (!savedUser.role) return 'ROLE_SELECT';
+      return 'MAIN';
+    }
     return 'WELCOME';
   });
 
   const [activeTab, setActiveTab] = useState('my_requests');
   
   // LocalStorage Request & Offer Persistence Cache (Survives Refresh F5!)
-  const [requests, setRequests] = useState(() => {
-    try {
-      const saved = localStorage.getItem('partdrive_requests');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [requests, setRequests] = useState(() => safeParseJSON(localStorage.getItem('partdrive_requests'), []));
 
   // LocalStorage Sent Seller Offers Cache (For 'Мои ответы и клиенты')
-  const [mySentOffers, setMySentOffers] = useState(() => {
-    try {
-      const saved = localStorage.getItem('partdrive_my_sent_offers');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const [mySentOffers, setMySentOffers] = useState(() => safeParseJSON(localStorage.getItem('partdrive_my_sent_offers'), []));
 
   const [loadingRequests, setLoadingRequests] = useState(false);
 
@@ -237,7 +206,6 @@ export default function App() {
   };
 
   const handleOfferSubmitted = (reqId, newOffer, tenderInfo) => {
-    // 1. Update requests list
     setRequests(prev => prev.map(r => {
       if (r.id === reqId) {
         const existing = r.offers || [];
@@ -247,7 +215,6 @@ export default function App() {
       return r;
     }));
 
-    // 2. Prepend to seller's sent offers feed ('Мои ответы и клиенты')
     const enrichedSentOffer = {
       ...newOffer,
       carModel: tenderInfo?.carModel || tenderInfo?.car_model || 'Автомобиль',

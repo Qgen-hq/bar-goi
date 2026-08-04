@@ -9,17 +9,55 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-// Security Headers Middleware
+// Rate Limiting Storage Map
+const ipRequestCounts = new Map();
+
+// IP Rate Limiter Middleware (DDoS & Spam Protection)
+function rateLimiter(windowMs, maxRequests, customMsg) {
+  return (req, res, next) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    
+    if (!ipRequestCounts.has(ip)) {
+      ipRequestCounts.set(ip, []);
+    }
+
+    const timestamps = ipRequestCounts.get(ip).filter(time => now - time < windowMs);
+    timestamps.push(now);
+    ipRequestCounts.set(ip, timestamps);
+
+    if (timestamps.length > maxRequests) {
+      return res.status(429).json({
+        error: customMsg || 'Слишком много запросов. Пожалуйста, подождите минуту.'
+      });
+    }
+
+    next();
+  };
+}
+
+// Enterprise Security Headers & CSP Middleware
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  );
   next();
 });
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Apply General Rate Limiter: Max 100 requests per 15 minutes per IP
+app.use('/api/', rateLimiter(15 * 60 * 1000, 100, 'Лимит запросов превышен. Попробуйте позже.'));
+
+// Apply Auth Rate Limiter: Max 10 login attempts per minute per IP
+app.use('/api/auth/', rateLimiter(60 * 1000, 10, 'Слишком много попыток входа. Попробуйте через минуту.'));
 
 // Anti-XSS Sanitizer Helper
 function sanitizeText(str) {
@@ -28,7 +66,9 @@ function sanitizeText(str) {
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<[^>]+>/g, '')
     .replace(/javascript:/gi, '')
+    .replace(/data:text\/html/gi, '')
     .replace(/onerror\s*=/gi, '')
+    .replace(/onload\s*=/gi, '')
     .trim();
 }
 
@@ -45,7 +85,6 @@ function broadcast(type, payload) {
 // AUTHENTICATION API (INTENT-BASED ROLE ROUTING)
 // ----------------------------------------------------
 
-// Direct Phone Login with Intent Role support
 app.post('/api/auth/login', (req, res) => {
   const { phone, intentRole } = req.body;
 
@@ -89,7 +128,6 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// Complete Role-Specific Onboarding
 app.post('/api/auth/complete-onboarding', (req, res) => {
   const { userId, role, driverData, sellerData } = req.body;
 
@@ -156,7 +194,7 @@ app.get('/api/driver/my-requests/:phone', (req, res) => {
   res.json(enriched);
 });
 
-app.post('/api/requests', (req, res) => {
+app.post('/api/requests', rateLimiter(60 * 1000, 5, 'Слишком частая отправка запросов'), (req, res) => {
   const { driverId, driverPhone, carModel, partName, photos } = req.body;
 
   if (!carModel?.trim() || !partName?.trim()) {
@@ -221,7 +259,7 @@ app.post('/api/seller/toggle-status', (req, res) => {
   res.json({ success: true, seller });
 });
 
-app.post('/api/offers', (req, res) => {
+app.post('/api/offers', rateLimiter(60 * 1000, 10, 'Слишком частая отправка предложений'), (req, res) => {
   const { requestId, sellerId, condition, brand, price, variants } = req.body;
 
   if (!requestId || !sellerId) {

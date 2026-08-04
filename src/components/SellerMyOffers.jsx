@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, MessageSquare, CheckCircle2, Clock, MapPin, ExternalLink, Star, Phone, Shield } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import { translations } from '../i18n/translations';
+import { safeWhatsAppUrl } from '../utils/security';
 
 export default function SellerMyOffers({ shop, mySentOffers, lang }) {
   const t = translations[lang || 'ru'];
@@ -70,15 +71,13 @@ export default function SellerMyOffers({ shop, mySentOffers, lang }) {
           {allOffers.map((offer, index) => {
             const carTitle = offer.carModel || offer.car_model || 'Автомобиль';
             const partTitle = offer.partNeeded || offer.part_name || 'Деталь';
-            const cleanPhone = (offer.driverPhone || offer.driver_phone || offer.whatsapp_phone || '77779998877').replace(/\D/g, '');
+            const rawPhone = offer.driverPhone || offer.driver_phone || offer.whatsapp_phone || '77779998877';
             const variants = offer.variants || [
               { brand: offer.brand || 'Оригинал', price: offer.price || 0, condition: offer.condition || 'New Original' }
             ];
 
-            const waMessage = encodeURIComponent(
-              `Сәлеметсіз бе! bar.go арқылы сізге ${carTitle} — ${partTitle} бойынша ұсыныс жіберген едім. Сұрақтарыңыз бар ма?`
-            );
-            const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
+            const waMsgText = `Сәлеметсіз бе! bar.go арқылы сізге ${carTitle} — ${partTitle} бойынша ұсыныс жіберген едім. Сұрақтарыңыз бар ма?`;
+            const waUrl = safeWhatsAppUrl(rawPhone, waMsgText);
 
             return (
               <div key={offer.id || index} className="card">
@@ -103,7 +102,7 @@ export default function SellerMyOffers({ shop, mySentOffers, lang }) {
                 {/* Customer Contact Details */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569', fontWeight: 700, marginBottom: '12px' }}>
                   <Phone size={14} color="var(--primary-emerald)" />
-                  Клиент: +{cleanPhone}
+                  Клиент: +{rawPhone.replace(/\D/g, '')}
                 </div>
 
                 {/* Variants Sent List */}

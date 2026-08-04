@@ -1,45 +1,16 @@
 import React, { useState } from 'react';
-import { RefreshCw, ShoppingBag, Clock, MapPin, Send, MessageSquare, Star, CheckCircle2, ChevronRight, AlertCircle, Phone, ArrowUpRight } from 'lucide-react';
+import { RefreshCw, ShoppingBag, Clock, MapPin, Send, MessageSquare, Star, CheckCircle2, ChevronRight, AlertCircle, Phone, ArrowUpRight, PlusCircle } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import ReviewModal from './ReviewModal';
 import { translations } from '../i18n/translations';
 import BrandedLoader from './BrandedLoader';
 
-const SAMPLE_DEMO_REQUESTS = [
-  {
-    id: 'req-demo-1',
-    carModel: 'Geely Monjaro 2023',
-    partNeeded: 'Бензонасос в сборе 2.0T',
-    photos: ['https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80'],
-    origin: 'China',
-    category: 'Engine',
-    createdAgo: '5 мин назад',
-    offers: [
-      {
-        id: 'off-1',
-        seller_id: 'seller-demo-1',
-        shopName: 'ChinaAuto Taldykorgan (Бутик #14)',
-        marketName: 'Талдыкорган - Центральный авторынок',
-        boothNumber: '1-й ряд, бутик 14',
-        whatsapp: '77779998877',
-        whatsapp_phone: '77779998877',
-        rating: 5.0,
-        reviewsCount: 18,
-        reviews_count: 18,
-        variants: [
-          { brand: 'Geely Genuine (Оригинал)', price: 45000, condition: 'New Original' },
-          { brand: 'Bosch Duplicate (Германия)', price: 28000, condition: 'New Aftermarket' }
-        ]
-      }
-    ]
-  }
-];
-
 export default function DriverRequestsList({ requests, loadingRequests, lang, userPhone, onRefresh, onReviewSubmitted }) {
   const t = translations[lang || 'ru'];
   const [activeReviewSeller, setActiveReviewSeller] = useState(null);
 
-  const displayRequests = (requests && requests.length > 0) ? requests : SAMPLE_DEMO_REQUESTS;
+  // Filter requests strictly for this driver (or show all user created requests if no phone match)
+  const displayRequests = requests || [];
 
   return (
     <div>
@@ -66,8 +37,16 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
       {loadingRequests ? (
         <BrandedLoader lang={lang} />
       ) : displayRequests.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-          У вас пока нет активных запросов на запчасти. Используйте форма «+ Найти деталь» справа.
+        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', background: '#FFFFFF' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'var(--primary-emerald-light)', color: 'var(--primary-emerald)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+            <ShoppingBag size={28} />
+          </div>
+          <h3 style={{ fontSize: '17px', fontWeight: 900, color: 'var(--dark-slate)', marginBottom: '6px' }}>
+            {lang === 'kz' ? 'Сізде әлі белсенді сұраныстар жоқ' : 'У вас пока нет активных запросов'}
+          </h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '380px', margin: '0 auto 16px auto', lineHeight: 1.4 }}>
+            {lang === 'kz' ? 'Көлігіңізге бөлшек табу үшін төмендегі «+ Найти деталь» түймесін басыңыз немесе дауыспен айтыңыз' : 'Чтобы найти деталь для авто, укажите марку и название запчасти в форме справа или голосом!'}
+          </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

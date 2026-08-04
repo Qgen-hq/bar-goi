@@ -1,37 +1,41 @@
-import React, { useState } from 'react';
-import { Send, Camera, Sparkles, CheckCircle2, AlertCircle, Trash2, Shield, Mic, Car } from 'lucide-react';
-import { autoClassify, CAR_ORIGINS, PART_CATEGORIES } from '../../server/classifier.js';
+import React, { useState, useEffect } from 'react';
+import { Camera, Trash2, Sparkles, Send, CheckCircle2, AlertCircle, Wrench, Shield, Mic } from 'lucide-react';
+import { autoClassify } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import VoiceInput from './VoiceInput';
 
-const POPULAR_GARAGE_CARS = [
-  { name: 'Geely Monjaro 2023', origin: 'China' },
-  { name: 'Toyota Camry 40 2.4L', origin: 'Japan' },
-  { name: 'Changan CS75 Plus', origin: 'China' },
-  { name: 'Hyundai Tucson 2021', origin: 'Korea' },
-  { name: 'BMW X5 E70 3.0', origin: 'Germany' }
-];
-
 export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
   const t = translations[lang || 'ru'];
-
   const [carModel, setCarModel] = useState('');
   const [partNeeded, setPartNeeded] = useState('');
   const [photos, setPhotos] = useState([]);
-  
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const classified = autoClassify(carModel, partNeeded);
-  const countryObj = classified.origin || CAR_ORIGINS.Germany;
-  const categoryObj = classified.category || PART_CATEGORIES.Suspension;
+  const [liveClassification, setLiveClassification] = useState(null);
+
+  useEffect(() => {
+    if (carModel || partNeeded) {
+      const res = autoClassify(carModel, partNeeded);
+      setLiveClassification(res);
+    } else {
+      setLiveClassification(null);
+    }
+  }, [carModel, partNeeded]);
+
+  const applyPreset = (car, part) => {
+    setCarModel(car);
+    setPartNeeded(part);
+  };
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     if (photos.length + files.length > 3) {
-      setError(lang === 'kz' ? 'Ең көбі 3 фото жүктеуге болады' : 'Максимум 3 фотографии');
+      setError('Максимум 3 фото / Ең көбі 3 фото');
       return;
     }
+    setError('');
 
     files.forEach(file => {
       const reader = new FileReader();
@@ -49,88 +53,131 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!carModel.trim() || !partNeeded.trim()) {
-      setError(lang === 'kz' ? 'Көлік маркасы мен бөлшекті көрсетіңіз' : 'Заполните марку авто и наименование запчасти');
+      setError('Марканы және бөлшекті көрсетіңіз');
       return;
     }
-
     setError('');
-    setSubmitting(true);
-
-    const payload = {
-      id: 'req-' + Date.now(),
-      driverPhone: user?.phone || '+7 701 111 22 33',
-      driver_phone: user?.phone || '+7 701 111 22 33',
-      carModel: carModel.trim(),
-      car_model: carModel.trim(),
-      partNeeded: partNeeded.trim(),
-      part_name: partNeeded.trim(),
-      photos,
-      origin: countryObj.id,
-      category: categoryObj.id,
-      detected_country: countryObj.id,
-      detected_category: categoryObj.id,
-      originInfo: countryObj,
-      categoryInfo: categoryObj,
-      city: user?.city || 'Талдыкорган',
-      createdAgo: 'Только что'
-    };
+    setLoading(true);
 
     try {
       const res = await fetch('/api/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          driverId: user?.id || 'usr-driver-1',
+          driverPhone: user?.phone || '+7 701 111 22 33',
+          carModel: carModel.trim(),
+          partName: partNeeded.trim(),
+          photos
+        })
       });
       const data = await res.json();
-      setSubmitting(false);
+      setLoading(false);
 
       if (res.ok && data.success) {
-        onRequestSubmitted(data.request || payload);
+        setSuccess(true);
+        setCarModel('');
+        setPartNeeded('');
+        setPhotos([]);
+        onRequestSubmitted(data.request);
+        setTimeout(() => setSuccess(false), 3000);
       } else {
-        onRequestSubmitted(payload);
+        const fallbackReq = {
+          id: 'req-' + Date.now(),
+          carModel: carModel.trim(),
+          partNeeded: partNeeded.trim(),
+          part_name: partNeeded.trim(),
+          photos,
+          origin: liveClassification?.origin?.id || 'Germany',
+          category: liveClassification?.category?.id || 'Suspension',
+          originInfo: liveClassification?.origin || { name: 'Германия' },
+          categoryInfo: liveClassification?.category || { name: 'Подвеска' },
+          expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+          offers: []
+        };
+        setSuccess(true);
+        setCarModel('');
+        setPartNeeded('');
+        setPhotos([]);
+        onRequestSubmitted(fallbackReq);
+        setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) {
-      setSubmitting(false);
-      onRequestSubmitted(payload);
+      setLoading(false);
+      const fallbackReq = {
+        id: 'req-' + Date.now(),
+        carModel: carModel.trim(),
+        partNeeded: partNeeded.trim(),
+        part_name: partNeeded.trim(),
+        photos,
+        origin: liveClassification?.origin?.id || 'Germany',
+        category: liveClassification?.category?.id || 'Suspension',
+        originInfo: liveClassification?.origin || { name: 'Германия' },
+        categoryInfo: liveClassification?.category || { name: 'Подвеска' },
+        expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+        offers: []
+      };
+      setSuccess(true);
+      setCarModel('');
+      setPartNeeded('');
+      setPhotos([]);
+      onRequestSubmitted(fallbackReq);
+      setTimeout(() => setSuccess(false), 3000);
     }
   };
 
   return (
-    <div className="card" style={{ boxShadow: 'var(--shadow-md)', border: '2px solid var(--primary-emerald)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'var(--primary-emerald-light)', color: 'var(--primary-emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Sparkles size={22} />
+    <div style={{ position: 'sticky', top: '90px' }}>
+      {/* Header Title Card */}
+      <div style={{ background: 'var(--dark-slate)', color: '#fff', padding: '20px', borderRadius: 'var(--radius-lg)', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <Sparkles size={22} color="var(--primary-emerald)" />
+          <h2 style={{ fontSize: '18px', fontWeight: 800 }}>{t.smartSearchTitle}</h2>
         </div>
-        <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--dark-slate)' }}>
-            {t.smartSearchTitle}
-          </h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            {t.smartSearchDesc}
-          </p>
+        <p style={{ fontSize: '12px', color: '#94A3B8', lineHeight: 1.4 }}>
+          {t.smartSearchDesc}
+        </p>
+
+        {/* 1-Click Test Presets */}
+        <div style={{ marginTop: '14px' }}>
+          <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase', marginBottom: '6px' }}>
+            Быстро запустить примери:
+          </div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => applyPreset('BMW X5 2010', 'Рулевая рейка')} className="preset-pill">
+              BMW X5 - Рейка
+            </button>
+            <button type="button" onClick={() => applyPreset('Toyota Camry 40', 'Помпа водяная')} className="preset-pill">
+              Camry 40 - Помпа
+            </button>
+            <button type="button" onClick={() => applyPreset('Haval F7 2021', 'Передний бампер')} className="preset-pill">
+              Haval F7 - Бампер
+            </button>
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '10px 14px', borderRadius: '12px', marginBottom: '14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertCircle size={16} /> {error}
+      {success && (
+        <div style={{ background: '#ECFDF5', border: '1px solid #6EE7B7', color: '#065F46', padding: '14px', borderRadius: '14px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+          <CheckCircle2 size={20} /> {t.tenderCreatedSuccess}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        {/* CAR MODEL FIELD + MY GARAGE PRESET BADGES */}
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>
-              {t.carModelLabel}
-            </label>
+      {error && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '14px', borderRadius: '14px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+          <AlertCircle size={20} /> {error}
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit} className="card">
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>{t.carModelLabel}</label>
             <VoiceInput
               lang={lang}
               onTranscript={(txt) => setCarModel(txt)}
             />
           </div>
-
           <input
             type="text"
             className="form-input"
@@ -139,49 +186,16 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
             placeholder={t.carModelPlaceholder}
             required
           />
-
-          {/* 1-TAP "MY GARAGE" CAR PRESETS */}
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginTop: '8px', paddingBottom: '4px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, alignSelf: 'center', whiteSpace: 'nowrap' }}>
-              🚗 {lang === 'kz' ? 'Тез таңдау:' : 'Быстрый выбор:'}
-            </span>
-            {POPULAR_GARAGE_CARS.map(c => (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => setCarModel(c.name)}
-                style={{
-                  background: carModel === c.name ? 'var(--primary-emerald-light)' : '#F1F5F9',
-                  border: carModel === c.name ? '1px solid var(--primary-emerald)' : '1px solid var(--border-color)',
-                  color: carModel === c.name ? 'var(--primary-emerald)' : '#475569',
-                  padding: '3px 10px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* PART NEEDED FIELD + VOICE INPUT */}
         <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>
-              {t.partNameLabel}
-            </label>
-
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>{t.partNameLabel}</label>
             <VoiceInput
               lang={lang}
               onTranscript={(txt) => setPartNeeded(txt)}
             />
           </div>
-
           <input
             type="text"
             className="form-input"
@@ -192,52 +206,62 @@ export default function DriverRequestForm({ user, lang, onRequestSubmitted }) {
           />
         </div>
 
-        {/* AUTO-CLASSIFIER DETECTED BADGE */}
-        {(carModel || partNeeded) && (
-          <div style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '12px 14px', borderRadius: '14px', marginBottom: '16px' }}>
-            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 800, textTransform: 'uppercase', marginBottom: '4px' }}>
-              ⚡ {t.detectedBanner}
+        {/* AI Classifier Live Result Banner */}
+        {liveClassification && (
+          <div style={{ background: 'var(--primary-emerald-light)', border: '1.5px solid #A7F3D0', padding: '12px 16px', borderRadius: '14px', marginBottom: '18px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} /> {t.detectedBanner}
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', background: 'var(--primary-emerald)', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontWeight: 800 }}>
-                {t.detectedCountry}: {t['country' + countryObj.id] || countryObj.name}
+              <span style={{ background: '#FFFFFF', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, color: 'var(--dark-slate)', border: '1px solid #6EE7B7' }}>
+                {t.detectedCountry}: {t['country' + liveClassification.origin.id] || liveClassification.origin.name}
               </span>
-              <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontWeight: 800 }}>
-                {t.detectedCategory}: {t['cat' + categoryObj.id] || categoryObj.name}
+              <span style={{ background: '#FFFFFF', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, color: 'var(--dark-slate)', border: '1px solid #6EE7B7' }}>
+                {t.detectedCategory}: {t['cat' + liveClassification.category.id] || liveClassification.category.name}
               </span>
             </div>
           </div>
         )}
 
-        {/* PHOTOS ATTACHMENT */}
+        {/* Photo Upload Box */}
         <div className="form-group">
           <label className="form-label">{t.photosLabel}</label>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            {photos.map((src, index) => (
-              <div key={index} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                <img src={src} alt="Part" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {photos.map((url, idx) => (
+              <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <img src={url} alt="Part" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <button
                   type="button"
-                  onClick={() => removePhoto(index)}
-                  style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', color: '#fff', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  onClick={() => removePhoto(idx)}
+                  style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', color: '#fff', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             ))}
 
             {photos.length < 3 && (
               <label style={{ width: '80px', height: '80px', borderRadius: '12px', border: '2px dashed #CBD5E1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#F8FAFC', color: 'var(--text-muted)' }}>
-                <Camera size={20} />
-                <span style={{ fontSize: '10px', marginTop: '2px', fontWeight: 700 }}>+ Фото</span>
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                <Camera size={24} />
+                <span style={{ fontSize: '10px', marginTop: '4px', fontWeight: 700 }}>+ Фото</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  style={{ display: 'none' }}
+                  multiple
+                />
               </label>
             )}
           </div>
         </div>
 
-        <button type="submit" className="btn-primary" disabled={submitting} style={{ padding: '14px', fontSize: '16px' }}>
-          <Send size={18} /> {submitting ? 'Опубликование...' : t.publishTenderBtn}
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          Срок хранения запроса: <b>24 часа</b>
+        </div>
+
+        <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '16px', fontSize: '16px' }}>
+          <Send size={18} /> {loading ? '...' : t.publishTenderBtn}
         </button>
       </form>
     </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Store, Globe, CheckSquare, Square, Save, CheckCircle2, Camera, Trash2, MapPin, AlertCircle, ArrowLeft, Phone, Shield } from 'lucide-react';
+import { Store, Globe, CheckSquare, Square, Save, CheckCircle2, Camera, Trash2, MapPin, AlertCircle, ArrowLeft, Phone, Shield, Bell, MessageSquare } from 'lucide-react';
 import { CAR_ORIGINS, PART_CATEGORIES } from '../../server/classifier.js';
 import { translations } from '../i18n/translations';
 import { KZ_CITIES } from './DriverOnboarding';
+import { safeWhatsAppUrl } from '../utils/security';
 
 const MARKETS_LIST = [
   'Талдыкорган - Центральный авторынок',
@@ -28,7 +29,8 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
   
   const [countries, setCountries] = useState(shop?.countries || ['China']);
   const [categories, setCategories] = useState(shop?.categories || ['Engine', 'Suspension', 'Brakes', 'Electrical', 'Optics']);
-  
+  const [whatsappAlertsEnabled, setWhatsappAlertsEnabled] = useState(true);
+
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +57,11 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       reader.readAsDataURL(file);
     }
   };
+
+  const testWaAlertUrl = safeWhatsAppUrl(
+    phone,
+    `Сәлеметсіз бе! bar.go жүйесінен ${city} қаласындағы «${shopName}» автобутигіне WhatsApp-уведомления белсендірілді! 🚘`
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,7 +93,8 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       whatsapp: phone.trim(),
       countries,
       categories,
-      rating: 5.0, // STRICT 5-STAR DEFAULT FOR ALL BOUTIQUES!
+      whatsapp_alerts: whatsappAlertsEnabled,
+      rating: 5.0,
       reviews_count: shop?.reviews_count || 1
     };
 
@@ -178,6 +186,37 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
       )}
 
       <form onSubmit={handleSubmit}>
+        {/* WHATSAPP INSTANT LEAD ALERTS CARD */}
+        <div className="card" style={{ border: '2px solid #25D366', background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#25D366', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bell size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#166534' }}>
+                🔔 WhatsApp Мгновенные Уведомления Клиентов
+              </h3>
+              <p style={{ fontSize: '12px', color: '#15803D' }}>
+                Получайте новые заявки водителей Талдыкоргана прямо в ваш WhatsApp
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#FFFFFF', padding: '12px', borderRadius: '12px', border: '1px solid #BBF7D0' }}>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: '#14532D' }}>
+              Уведомления новых заказов в WhatsApp
+            </span>
+            <a
+              href={testWaAlertUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ background: '#25D366', color: '#fff', padding: '6px 14px', borderRadius: '10px', textDecoration: 'none', fontSize: '12px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <MessageSquare size={14} /> Подключить WhatsApp
+            </a>
+          </div>
+        </div>
+
         {/* SECTION 1: BOOTH PROFILE & LOCATION */}
         <div className="card">
           <h3 style={{ fontSize: '16px', fontWeight: 900, marginBottom: '14px', color: 'var(--dark-slate)', display: 'flex', alignItems: 'center', gap: '8px' }}>

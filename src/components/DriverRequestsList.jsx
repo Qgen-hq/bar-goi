@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { RefreshCw, ShoppingBag, Clock, MapPin, Send, MessageSquare, Star, CheckCircle2, ChevronRight, AlertCircle, Phone, ArrowUpRight, PlusCircle } from 'lucide-react';
+import { RefreshCw, ShoppingBag, Clock, MapPin, Send, MessageSquare, Star, CheckCircle2, ChevronRight, AlertCircle, Phone, ArrowUpRight, PlusCircle, Navigation } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import ReviewModal from './ReviewModal';
 import { translations } from '../i18n/translations';
 import BrandedLoader from './BrandedLoader';
 import { safeWhatsAppUrl } from '../utils/security';
+import { get2GISUrl } from '../utils/2gis';
 
 export default function DriverRequestsList({ requests, loadingRequests, lang, userPhone, onRefresh, onReviewSubmitted }) {
   const t = translations[lang || 'ru'];
@@ -108,6 +109,7 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
 
                         const waMsgText = `Сәлеметсіз бе! bar.go арқылы ${carTitle} — ${partTitle} бөлшегі бойынша ұсынысыңызды көрдім.`;
                         const waUrl = safeWhatsAppUrl(rawPhone, waMsgText);
+                        const gisUrl = get2GISUrl(off.marketName || off.market_name, req.city);
 
                         return (
                           <div key={off.id || oIdx} style={{ background: '#FFFFFF', border: '1.5px solid var(--border-color)', borderRadius: '14px', padding: '14px', boxShadow: 'var(--shadow-sm)' }}>
@@ -146,8 +148,8 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
                               </div>
                             </div>
 
-                            {/* Action Buttons: Direct WhatsApp & Rating */}
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            {/* Action Buttons: Direct WhatsApp, 2GIS Route & Rating */}
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               <a
                                 href={waUrl}
                                 target="_blank"
@@ -157,6 +159,18 @@ export default function DriverRequestsList({ requests, loadingRequests, lang, us
                               >
                                 <MessageSquare size={16} />
                                 <span>{t.acceptWhatsApp}</span>
+                              </a>
+
+                              {/* 2GIS ROUTE BUTTON */}
+                              <a
+                                href={gisUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn-secondary"
+                                style={{ flex: 1.5, textDecoration: 'none', padding: '10px', fontSize: '12px', background: '#F1F5F9', color: '#1E293B', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                              >
+                                <Navigation size={14} color="#2563EB" />
+                                <span>2GIS ➔</span>
                               </a>
 
                               <button

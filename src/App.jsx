@@ -12,6 +12,7 @@ import SellerMyOffers from './components/SellerMyOffers';
 import AuthModal from './components/AuthModal';
 import { safeParseJSON } from './utils/security';
 import { supabase } from './lib/supabase';
+import { Bell, X } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('partdrive_lang') || 'ru');
@@ -137,13 +138,27 @@ export default function App() {
     }
   }, [authStep, user?.phone, user?.role]);
 
-  // Real-Time Supabase Postgres Changes Subscription
+  const [pushNotification, setPushNotification] = useState(null);
+
+  // Real-Time Supabase Postgres Changes Subscription & Push Notification
   useEffect(() => {
     if (authStep !== 'MAIN') return;
 
     const channel = supabase
       .channel('public:realtime_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'requests' }, (payload) => {
+        const newReq = payload.new;
+        if (newReq) {
+          setPushNotification({
+            id: newReq.id,
+            carModel: newReq.car_model || newReq.carModel || 'Автомобиль',
+            partName: newReq.part_name || newReq.partNeeded || 'Запчасть'
+          });
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        }
+        fetchRequests();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'requests' }, () => {
         fetchRequests();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => {
@@ -251,6 +266,72 @@ export default function App() {
       setLang={handleSetLang}
       onLogout={handleLogout}
     >
+      {/* IN-APP REALTIME PUSH NOTIFICATION TOAST */}
+      {pushNotification && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 3000,
+          width: '92%',
+          maxWidth: '460px',
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          color: '#FFFFFF',
+          border: '2px solid var(--primary-emerald)',
+          borderRadius: '18px',
+          padding: '12px 16px',
+          boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ background: 'var(--primary-emerald)', color: '#fff', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bell size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#34D399', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🔔 {lang === 'kz' ? 'ЖАҢА СҰРАНЫС КЕЛДІ!' : 'НОВЫЙ ЗАПРОС НА ДЕТАЛЬ!'}
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#FFFFFF', marginTop: '2px' }}>
+                {pushNotification.carModel} — {pushNotification.partName}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              onClick={() => {
+                setActiveTab('tenders_feed');
+                setPushNotification(null);
+              }}
+              style={{
+                background: 'var(--primary-emerald)',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: 900,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {lang === 'kz' ? 'Көру' : 'Посмотреть'}
+            </button>
+
+            <button
+              onClick={() => setPushNotification(null)}
+              style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', color: '#94A3B8', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* SCREEN 0: SPLASH & WELCOME */}
       {authStep === 'WELCOME' && (
         <SplashScreen

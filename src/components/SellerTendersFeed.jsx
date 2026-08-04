@@ -1,70 +1,10 @@
 import React, { useState } from 'react';
-import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter, LogOut } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, Clock, Send, Store, AlertCircle, MapPin, Shield, Plus, Trash2, Mic, UserCheck, MessageSquare, Filter, LogOut, Zap } from 'lucide-react';
 import ConditionBadge from './ConditionBadge';
 import BottomSheet from './BottomSheet';
 import SellerMyOffers from './SellerMyOffers';
 import { translations } from '../i18n/translations';
 import VoiceInput from './VoiceInput';
-
-// Sample Requests Feed for Seller
-const SAMPLE_SELLER_FEED = [
-  {
-    id: 'req-seller-demo-1',
-    carModel: 'Geely Monjaro 2023',
-    car_model: 'Geely Monjaro 2023',
-    partNeeded: 'Бензонасос в сборе 2.0T',
-    part_name: 'Бензонасос в сборе 2.0T',
-    photos: ['https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80'],
-    origin: 'China',
-    category: 'Engine',
-    originInfo: { name: 'Китай' },
-    categoryInfo: { name: 'Двигатель и Топливная' },
-    driverPhone: '+7 777 999 88 77',
-    createdAgo: '10 мин назад'
-  },
-  {
-    id: 'req-seller-demo-2',
-    carModel: 'Haval F7 2021',
-    car_model: 'Haval F7 2021',
-    partNeeded: 'Передняя фара правая LED',
-    part_name: 'Передняя фара правая LED',
-    photos: [],
-    origin: 'China',
-    category: 'Optics',
-    originInfo: { name: 'Китай' },
-    categoryInfo: { name: 'Оптика и Фары' },
-    driverPhone: '+7 701 444 33 22',
-    createdAgo: '15 мин назад'
-  },
-  {
-    id: 'req-seller-demo-3',
-    carModel: 'BMW X5 E70 2010',
-    car_model: 'BMW X5 E70 2010',
-    partNeeded: 'Рулевая рейка гидравлическая',
-    part_name: 'Рулевая рейка гидравлическая',
-    photos: [],
-    origin: 'Germany',
-    category: 'Suspension',
-    originInfo: { name: 'Германия' },
-    categoryInfo: { name: 'Подвеска и Рулевое' },
-    driverPhone: '+7 705 555 44 33',
-    createdAgo: '25 мин назад'
-  },
-  {
-    id: 'req-seller-demo-4',
-    carModel: 'Toyota Camry 40 2008',
-    car_model: 'Toyota Camry 40 2008',
-    partNeeded: 'Помпа водяная охлаждения 2.4L',
-    part_name: 'Помпа водяная охлаждения 2.4L',
-    photos: [],
-    origin: 'Japan',
-    category: 'Engine',
-    originInfo: { name: 'Япония' },
-    categoryInfo: { name: 'Двигатель' },
-    driverPhone: '+7 747 123 45 67',
-    createdAgo: '45 мин назад'
-  }
-];
 
 export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, onSubmitOffer, onOpenShopSetup, onLogout }) {
   const t = translations[lang || 'ru'];
@@ -82,7 +22,8 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
   const [success, setSuccess] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
-  const rawRequests = (requests && requests.length > 0) ? requests : SAMPLE_SELLER_FEED;
+  // Clean Requests Feed: Only real user-created requests
+  const rawRequests = requests || [];
   const shopCountries = shop?.countries || ['China', 'Germany', 'Japan'];
 
   const filteredRequests = rawRequests.filter(req => {
@@ -157,15 +98,15 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
       request_id: activeTenderForOffer.id,
       sellerId: shop?.user_id || 'usr-seller-1',
       seller_id: shop?.user_id || 'usr-seller-1',
-      shopName: shop?.shop_name || shop?.shopName || 'ChinaParts Taldykorgan (Бутик #42)',
-      shop_name: shop?.shop_name || shop?.shopName || 'ChinaParts Taldykorgan (Бутик #42)',
-      marketName: shop?.market_name || shop?.marketName || 'Талдыкорган - Центральный авторынок',
-      market_name: shop?.market_name || shop?.marketName || 'Талдыкорган - Центральный авторынок',
-      boothNumber: shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42',
-      booth_number: shop?.booth_number || shop?.boothNumber || '2-й ряд, бутик 42',
+      shopName: shop?.shop_name || shop?.shopName || 'Автобутик #42',
+      shop_name: shop?.shop_name || shop?.shopName || 'Автобутик #42',
+      marketName: shop?.market_name || shop?.marketName || 'Талдыкорган - Авторынок',
+      market_name: shop?.market_name || shop?.marketName || 'Талдыкорган - Авторынок',
+      boothNumber: shop?.booth_number || shop?.boothNumber || 'Бутик #42',
+      booth_number: shop?.booth_number || shop?.boothNumber || 'Бутик #42',
       whatsapp: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
       whatsapp_phone: shop?.whatsapp_phone || shop?.whatsapp || '77779998877',
-      rating: 5.0, // STRICT 5.0 STAR DEFAULT FOR ALL BOUTIQUES!
+      rating: 5.0,
       reviewsCount: shop?.reviews_count || 1,
       reviews_count: shop?.reviews_count || 1,
       condition: firstVariant.condition,
@@ -389,8 +330,16 @@ export default function SellerTendersFeed({ shop, requests, mySentOffers, lang, 
           {/* Tenders Cards Grid */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {filteredRequests.length === 0 ? (
-              <div className="card" style={{ textTransform: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-                По выбранным тегам ({shopCountries.join(', ')}) пока нет запросов. Переключите на «Все запросы».
+              <div className="card" style={{ textAlign: 'center', padding: '36px 20px', background: '#FFFFFF' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(59, 130, 246, 0.1)', color: '#2563EB', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                  <ShoppingBag size={28} />
+                </div>
+                <h3 style={{ fontSize: '17px', fontWeight: 900, color: 'var(--dark-slate)', marginBottom: '6px' }}>
+                  {lang === 'kz' ? 'Қазірше автобөлшектерге белсенді сұраныстар жоқ' : 'В вашей категории пока нет активных запросов'}
+                </h3>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto', lineHeight: 1.4 }}>
+                  {lang === 'kz' ? 'Жүргізушілер бөлшек іздегенде сұраныстар осы жерде нақты уақыт режимінде пайда болады' : 'Как только автовладельцы оставят запрос на автозапчасть, новые заявки появятся здесь в реальном времени!'}
+                </p>
               </div>
             ) : (
               filteredRequests.map((tender, index) => {

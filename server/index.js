@@ -9,8 +9,28 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
+// Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 app.use(cors());
-app.use(express.json({ limit: '15mb' }));
+app.use(express.json({ limit: '10mb' }));
+
+// Anti-XSS Sanitizer Helper
+function sanitizeText(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/javascript:/gi, '')
+    .replace(/onerror\s*=/gi, '')
+    .trim();
+}
 
 function broadcast(type, payload) {
   const msg = JSON.stringify({ type, payload });
@@ -29,11 +49,11 @@ function broadcast(type, payload) {
 app.post('/api/auth/login', (req, res) => {
   const { phone, intentRole } = req.body;
 
-  if (!phone || phone.trim().length < 10) {
+  if (!phone || typeof phone !== 'string' || phone.trim().length < 10) {
     return res.status(400).json({ error: 'Введите корректный номер телефона' });
   }
 
-  const cleanPhone = phone.trim();
+  const cleanPhone = sanitizeText(phone.trim());
   let profile = db.getProfileByPhone(cleanPhone);
 
   const targetRole = intentRole ? (intentRole.toLowerCase() === 'seller' ? 'seller' : 'driver') : null;
@@ -45,7 +65,6 @@ app.post('/api/auth/login', (req, res) => {
       db.updateProfileRole(profile.id, targetRole, '');
     }
   } else if (targetRole) {
-    // Override active role to match user's explicit intent role from landing card
     profile.role = targetRole;
     db.updateProfileRole(profile.id, targetRole, profile.full_name || '');
   }
@@ -80,7 +99,7 @@ app.post('/api/auth/complete-onboarding', (req, res) => {
   const targetRole = (role || '').toLowerCase() === 'seller' ? 'seller' : 'driver';
 
   if (targetRole === 'driver') {
-    const fullName = driverData?.fullName?.trim() || 'Водитель';
+    const fullName = sanitizeText(driverData?.fullName || 'Водитель');
     profile = db.updateProfileRole(userId, 'driver', fullName);
     res.json({ success: true, profile: { ...profile, role: 'driver' }, sellerProfile: null });
   } else if (targetRole === 'seller') {
@@ -90,17 +109,21 @@ app.post('/api/auth/complete-onboarding', (req, res) => {
       return res.status(400).json({ error: 'Заполните все поля автобутика' });
     }
 
-    let cleanWa = whatsappPhone.replace(/\D/g, '');
+    let cleanWa = (whatsappPhone || '').replace(/\D/g, '');
     if (cleanWa.startsWith('8')) cleanWa = '7' + cleanWa.slice(1);
     if (!cleanWa.startsWith('7') && cleanWa.length === 10) cleanWa = '7' + cleanWa;
 
-    profile = db.updateProfileRole(userId, 'seller', shopName.trim());
+    const safeShopName = sanitizeText(shopName);
+    const safeMarketName = sanitizeText(marketName);
+    const safeBoothNumber = sanitizeText(boothNumber);
+
+    profile = db.updateProfileRole(userId, 'seller', safeShopName);
     const sellerProfile = db.saveSellerProfile({
       user_id: userId,
-      shop_name: shopName.trim(),
+      shop_name: safeShopName,
       city: city || 'Талдыкорган',
-      market_name: marketName,
-      booth_number: boothNumber.trim(),
+      market_name: safeMarketName,
+      booth_number: safeBoothNumber,
       photo_url: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
       whatsapp_phone: cleanWa,
       countries,
@@ -117,7 +140,8 @@ app.post('/api/auth/complete-onboarding', (req, res) => {
 // DRIVER ENDPOINTS
 // ----------------------------------------------------
 app.get('/api/driver/my-requests/:phone', (req, res) => {
-  const requests = db.getRequestsByDriverPhone(req.params.phone);
+  const safePhone = sanitizeText(req.params.phone);
+  const requests = db.getRequestsByDriverPhone(safePhone);
   const enriched = requests.map(r => {
     const offers = db.getOffersByRequestId(r.id);
     return {
@@ -139,13 +163,17 @@ app.post('/api/requests', (req, res) => {
     return res.status(400).json({ error: 'Укажите марку/модель авто и требуемую деталь' });
   }
 
-  const classification = autoClassify(carModel, partName);
+  const safeCarModel = sanitizeText(carModel);
+  const safePartName = sanitizeText(partName);
+  const safePhone = sanitizeText(driverPhone || '+7 701 111 22 33');
+
+  const classification = autoClassify(safeCarModel, safePartName);
 
   const newRequest = db.createRequest({
     driver_id: driverId || 'usr-driver-1',
-    driver_phone: driverPhone || '+7 701 111 22 33',
-    car_model: carModel.trim(),
-    part_name: partName.trim(),
+    driver_phone: safePhone,
+    car_model: safeCarModel,
+    part_name: safePartName,
     photos: photos || [],
     detected_country: classification.origin.id,
     detected_category: classification.category.id
@@ -203,6 +231,9 @@ app.post('/api/offers', (req, res) => {
   const seller = db.getSellerProfileByUserId(sellerId);
   if (!seller) return res.status(404).json({ error: 'Продавец не найден' });
 
+  const safeBrand = sanitizeText(brand || 'Оригинал');
+  const safePrice = Math.max(0, Number(price || 0));
+
   try {
     const offer = db.createOffer({
       request_id: requestId,
@@ -215,9 +246,13 @@ app.post('/api/offers', (req, res) => {
       rating: seller.rating || 5.0,
       reviews_count: seller.reviews_count || 0,
       condition: condition || 'New Original',
-      brand: (brand || 'Оригинал').trim(),
-      price: Number(price || 0),
-      variants: variants || []
+      brand: safeBrand,
+      price: safePrice,
+      variants: (variants || []).map(v => ({
+        brand: sanitizeText(v.brand),
+        price: Math.max(0, Number(v.price || 0)),
+        condition: v.condition
+      }))
     });
 
     broadcast('NEW_OFFER', offer);
@@ -235,7 +270,8 @@ app.post('/api/reviews', (req, res) => {
     return res.status(400).json({ error: 'Укажите оценку от 1 до 5 звезд' });
   }
 
-  const result = db.addReview({ sellerId, driverId, rating, comment });
+  const safeComment = sanitizeText(comment || '');
+  const result = db.addReview({ sellerId, driverId, rating: Number(rating), comment: safeComment });
 
   broadcast('SHOP_RATING_UPDATED', {
     sellerId,

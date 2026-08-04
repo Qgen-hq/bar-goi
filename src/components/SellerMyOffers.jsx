@@ -7,10 +7,10 @@ import { safeWhatsAppUrl } from '../utils/security';
 export default function SellerMyOffers({ shop, mySentOffers, lang }) {
   const t = translations[lang || 'ru'];
 
-  const allOffers = mySentOffers || [];
+  const allOffers = (Array.isArray(mySentOffers) ? mySentOffers : []).filter(off => off && typeof off === 'object');
 
   const totalValueOffered = allOffers.reduce((acc, off) => {
-    const firstPrice = off.variants?.[0]?.price || off.price || 0;
+    const firstPrice = off?.variants?.[0]?.price || off?.price || 0;
     return acc + Number(firstPrice);
   }, 0);
 

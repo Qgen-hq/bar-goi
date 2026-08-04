@@ -82,13 +82,18 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
     const sellerData = {
       user_id: user?.id || 'usr-seller-' + Date.now(),
       shop_name: shopName.trim(),
+      shopName: shopName.trim(),
       city: city || 'Талдыкорган',
       market_name: marketName,
+      marketName: marketName,
       booth_number: boothNumber.trim(),
+      boothNumber: boothNumber.trim(),
       photo_url: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
+      storefrontPhoto: storefrontPhoto || 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=400&q=80',
       whatsapp_phone: phone.trim().replace(/\D/g, ''),
-      countries,
-      categories,
+      whatsapp: phone.trim().replace(/\D/g, ''),
+      countries: Array.isArray(countries) ? countries : ['China', 'Japan', 'Germany'],
+      categories: Array.isArray(categories) ? categories : ['Engine', 'Suspension'],
       rating: shop?.rating || 5.0,
       reviews_count: shop?.reviews_count || 1,
       online_status: true,
@@ -96,16 +101,7 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
     };
 
     try {
-      // Save directly to Supabase — no Express server dependency
-      const { data: savedSeller, error: supaErr } = await supabase
-        .from('seller_profiles')
-        .upsert(sellerData, { onConflict: 'user_id' })
-        .select()
-        .single();
-
-      if (supaErr) console.error('Supabase seller profile save error:', supaErr.message);
-
-      // Update profiles table role to seller
+      // 1. Update profiles table first (resolves foreign key constraint)
       await supabase
         .from('profiles')
         .upsert({
@@ -116,9 +112,31 @@ export default function SellerOnboarding({ user, shop, lang, onSaveShop, onBackT
           city: sellerData.city
         }, { onConflict: 'id' });
 
+      // 2. Save seller_profiles table
+      const { data: savedSeller, error: supaErr } = await supabase
+        .from('seller_profiles')
+        .upsert({
+          user_id: sellerData.user_id,
+          shop_name: sellerData.shop_name,
+          city: sellerData.city,
+          market_name: sellerData.market_name,
+          booth_number: sellerData.booth_number,
+          photo_url: sellerData.photo_url,
+          whatsapp_phone: sellerData.whatsapp_phone,
+          countries: sellerData.countries,
+          categories: sellerData.categories,
+          rating: sellerData.rating,
+          reviews_count: sellerData.reviews_count,
+          online_status: true
+        }, { onConflict: 'user_id' })
+        .select()
+        .single();
+
+      if (supaErr) console.error('Supabase seller profile save error:', supaErr.message);
+
       setSaving(false);
       setSavedSuccess(true);
-      const finalShop = savedSeller || sellerData;
+      const finalShop = { ...sellerData, ...(savedSeller || {}) };
       onSaveShop(finalShop);
     } catch (err) {
       console.error('Onboarding save error:', err);
